@@ -1,0 +1,27 @@
+[package]
+name = "nft-lending"
+version = "0.1.0"
+edition = "2021"
+license = "WTFPL"
+publish = false
+
+[workspace]
+
+[features]
+no-entrypoint = []
+test-bpf = []
+
+[dependencies]
+solana-program = "1.9.5"
+thiserror = "1.0.30"
+spl-token = {version = "3.3.0", features = ["no-entrypoint"]}
+spl-associated-token-account = { version = "1.0.3", features = ["no-entrypoint"] }
+arrayref = "0.3.6"
+
+[dev-dependencies]
+solana-sdk = "1.9.5"
+solana-program-test = "1.9.5"
+tokio = { version = "1.16.1", features = ["macros"]}
+
+[lib]
+crate-type = ["cdylib", "lib"]

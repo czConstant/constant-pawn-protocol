@@ -1,0 +1,41 @@
+{
+  "name": "escrow-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc -p ./tsconfig.json",
+    "setup-validator": "solana-test-validator -r --mint E2F3fsS1HpsLb2VpEgsA5ztfo83CWFWW4jWpC6FvJ6qR --bpf-program 4yBTZXsuz7c1X3PJF4PPCJr8G6HnNAgRvzAWVoFZMncH",
+    "loan": "npm run compile && node build/loan.js",
+    "cancel_loan": "npm run compile && node build/cancel_loan.js",
+    "offer": "npm run compile && node build/offer.js",
+    "order": "npm run compile && node build/order.js",
+    "cancel_offer": "npm run compile && node build/cancel_offer.js",
+    "accept": "npm run compile && node build/accept.js",
+    "pay": "npm run compile && node build/pay.js",
+    "repay": "npm run compile && node build/loan.js&& node build/offer.js && node build/accept.js && node build/pay.js",
+    "liquidate": "npm run compile && node build/liquidate.js",
+    "close_offer": "npm run compile && node build/close_offer.js",
+    "loan_order": "npm run compile && node build/loan.js && node build/order.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bs58": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-unused-imports": "^1.1.5",
+    "prettier": "^2.4.1",
+    "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "bn.js": "^5.2.0",
+    "@solana/buffer-layout": "^4.0.0",
+    "@solana/buffer-layout-utils": "^0.2.0",
+    "@solana/web3.js": "^1.32.0"
+  }
+}
