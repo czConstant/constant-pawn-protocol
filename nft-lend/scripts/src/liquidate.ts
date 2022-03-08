@@ -1,21 +1,12 @@
-import { AccountLayout, Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  SYSVAR_CLOCK_PUBKEY,
+  Connection, PublicKey, SYSVAR_CLOCK_PUBKEY,
   Transaction
 } from "@solana/web3.js";
 import {
   getKeypair,
   getProgramId,
-  getPublicKey,
-  getTerms,
-  getTokenBalance, InitLoanInstruction, LoanInfoLayout,
-  LOAN_INFO_LAYOUT, logError,
-  writePublicKey, LiquidateInstruction
+  getPublicKey, LiquidateInstruction
 } from "./utils";
 import BN = require("bn.js");
 
@@ -80,7 +71,7 @@ const liquidate = async () => {
   );
 
   //
-  console.log("xong");
+  console.log("done");
 };
 
 liquidate();

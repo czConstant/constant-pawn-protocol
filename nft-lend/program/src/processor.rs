@@ -14,8 +14,9 @@ use solana_program::{
 };
 use spl_token::state::Account as TokenAccount;
 
-pub struct Processor;
 static ADMIN_WALLET: &str = "2cBAH57hq9RVfA1DeScHRv1WHKL3f9LTxrTzYupDBocq";
+
+pub struct Processor;
 impl Processor {
     pub fn process(
         program_id: &Pubkey,
@@ -48,6 +49,7 @@ impl Processor {
                 loan_duration,
                 interest_rate,
                 loan_currency,
+                expired,
             } => {
                 msg!("Instruction: MakeOffer");
                 Self::process_make_offer(
@@ -57,6 +59,7 @@ impl Processor {
                     loan_duration,
                     interest_rate,
                     loan_currency,
+                    expired,
                     program_id,
                 )
             }
@@ -192,6 +195,7 @@ impl Processor {
         loan_duration: u64,
         interest_rate: u64,
         loan_currency: Pubkey,
+        expired: u64,
         program_id: &Pubkey,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
@@ -240,6 +244,7 @@ impl Processor {
         offer_info.status = LoanStatus::Open as u8;
         offer_info.paid_at = 0;
         offer_info.paid_amount = 0;
+        offer_info.expired = expired;
         Offer::pack(offer_info, &mut offer_info_account.try_borrow_mut_data()?)?;
         let (pda, _nonce) = Pubkey::find_program_address(&[b"lending"], program_id);
 
@@ -325,6 +330,9 @@ impl Processor {
         let pda_account = next_account_info(account_info_iter)?;
 
         let clock = Clock::from_account_info(next_account_info(account_info_iter)?)?;
+        if offer_info.expired > 0 && offer_info.expired < clock.unix_timestamp as u64 {
+            return Err(LendingError::OfferHasExpired.into());
+        }
         let transfer_token_to_borrower_ix = spl_token::instruction::transfer(
             token_program.key,
             pda_token_account.key,

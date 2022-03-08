@@ -142,7 +142,7 @@ const order_now = async () => {
   ]);
 
   //
-  console.log("xong");
+  console.log("done");
 };
 
 order_now();

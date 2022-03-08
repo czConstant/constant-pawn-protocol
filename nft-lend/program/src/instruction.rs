@@ -68,6 +68,8 @@ pub enum LendingInstruction {
         // The contract of the currency being used as principal/interest
         // for this loan.
         loan_currency: Pubkey,
+        //expired time
+        expired: u64,
     },
 
     /// Accepts a trade
@@ -237,6 +239,11 @@ impl LendingInstruction {
                     .and_then(|slice| slice.try_into().ok())
                     .map(Pubkey::new)
                     .ok_or(InvalidInstruction)?,
+                expired: rest
+                    .get(88..96)
+                    .and_then(|slice| slice.try_into().ok())
+                    .map(u64::from_le_bytes)
+                    .ok_or(InvalidInstruction)?,
             },
             2 => Self::AcceptOffer {
                 loan_id: rest
@@ -363,6 +370,7 @@ impl LendingInstruction {
                 loan_duration,
                 interest_rate,
                 loan_currency,
+                expired,
             } => {
                 buf.push(1);
                 buf.extend_from_slice(&loan_id.to_bytes());
@@ -370,6 +378,7 @@ impl LendingInstruction {
                 buf.extend_from_slice(&loan_duration.to_le_bytes());
                 buf.extend_from_slice(&interest_rate.to_le_bytes());
                 buf.extend_from_slice(&loan_currency.to_bytes());
+                buf.extend_from_slice(&expired.to_le_bytes());
             }
             &Self::AcceptOffer {
                 loan_id,
@@ -421,42 +430,4 @@ impl LendingInstruction {
         };
         buf
     }
-}
-
-pub fn init_loan_instruction(
-    lending_program_id: &Pubkey,
-    borrower_account: &Pubkey,
-    temp_token_account: &Pubkey,
-    borrower_denomination_account: &Pubkey,
-    loan_info_account: &Pubkey,
-    sys_var_rent: &Pubkey,
-    token_program: &Pubkey,
-
-    loan_principal_amount: u64,
-    loan_duration: u64,
-    interest_rate: u64,
-    nft_collateral_contract: &Pubkey,
-    loan_currency: &Pubkey,
-) -> Result<Instruction, ProgramError> {
-    let data = LendingInstruction::InitLoan {
-        loan_principal_amount,
-        loan_duration,
-        interest_rate,
-        nft_collateral_contract: *nft_collateral_contract,
-        loan_currency: *loan_currency,
-    }
-    .pack();
-    let accounts = vec![
-        AccountMeta::new_readonly(*borrower_account, true),
-        AccountMeta::new(*temp_token_account, false),
-        AccountMeta::new_readonly(*borrower_denomination_account, false),
-        AccountMeta::new(*loan_info_account, false),
-        AccountMeta::new_readonly(*sys_var_rent, false),
-        AccountMeta::new_readonly(*token_program, false),
-    ];
-    Ok(Instruction {
-        program_id: *lending_program_id,
-        accounts,
-        data,
-    })
 }

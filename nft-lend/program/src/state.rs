@@ -18,6 +18,7 @@ pub struct Offer {
     pub status: u8,
     pub paid_at: u64,
     pub paid_amount: u64,
+    pub expired: u64,
 }
 
 impl Sealed for Offer {}
@@ -29,7 +30,7 @@ impl IsInitialized for Offer {
 }
 
 impl Pack for Offer {
-    const LEN: usize = 170;
+    const LEN: usize = 178;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
         let src = array_ref![src, 0, Offer::LEN];
         let (
@@ -44,7 +45,8 @@ impl Pack for Offer {
             status,
             paid_at,
             paid_amount,
-        ) = array_refs![src, 1, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8];
+            expired,
+        ) = array_refs![src, 1, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 8];
         let is_initialized = match is_initialized {
             [0] => false,
             [1] => true,
@@ -63,6 +65,7 @@ impl Pack for Offer {
             status: u8::from_le_bytes(*status),
             paid_at: u64::from_le_bytes(*paid_at),
             paid_amount: u64::from_le_bytes(*paid_amount),
+            expired: u64::from_le_bytes(*expired),
         })
     }
 
@@ -80,7 +83,8 @@ impl Pack for Offer {
             status_dst,
             paid_at_dst,
             paid_amount_dst,
-        ) = mut_array_refs![dst, 1, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8];
+            expired_dst,
+        ) = mut_array_refs![dst, 1, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 8];
 
         let Offer {
             is_initialized,
@@ -94,6 +98,7 @@ impl Pack for Offer {
             status,
             paid_at,
             paid_amount,
+            expired,
         } = self;
 
         is_initialized_dst[0] = *is_initialized as u8;
@@ -107,6 +112,7 @@ impl Pack for Offer {
         *status_dst = status.to_le_bytes();
         *paid_at_dst = paid_at.to_le_bytes();
         *paid_amount_dst = paid_amount.to_le_bytes();
+        *expired_dst = expired.to_le_bytes();
     }
 }
 
@@ -125,6 +131,7 @@ pub struct Loan {
     pub pay_amount: u64,
     pub lender_pubkey: Pubkey,
     pub offer_id: Pubkey,
+    pub extend_duration: u64,
 }
 
 impl Sealed for Loan {}
@@ -136,7 +143,7 @@ impl IsInitialized for Loan {
 }
 
 impl Pack for Loan {
-    const LEN: usize = 266;
+    const LEN: usize = 274;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
         let src = array_ref![src, 0, Loan::LEN];
         let (
@@ -154,7 +161,8 @@ impl Pack for Loan {
             pay_amount,
             lender_pubkey,
             offer_id,
-        ) = array_refs![src, 1, 32, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 32, 32];
+            extend_duration,
+        ) = array_refs![src, 1, 32, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 32, 32, 8];
         let is_initialized = match is_initialized {
             [0] => false,
             [1] => true,
@@ -176,6 +184,7 @@ impl Pack for Loan {
             pay_amount: u64::from_le_bytes(*pay_amount),
             lender_pubkey: Pubkey::new_from_array(*lender_pubkey),
             offer_id: Pubkey::new_from_array(*offer_id),
+            extend_duration: u64::from_le_bytes(*extend_duration),
         })
     }
 
@@ -196,7 +205,8 @@ impl Pack for Loan {
             pay_amount_dst,
             lender_pubkey_dst,
             offer_id_dst,
-        ) = mut_array_refs![dst, 1, 32, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 32, 32];
+            extend_duration_dst,
+        ) = mut_array_refs![dst, 1, 32, 32, 32, 8, 8, 8, 32, 32, 1, 8, 8, 32, 32, 8];
 
         let Loan {
             is_initialized,
@@ -213,6 +223,7 @@ impl Pack for Loan {
             pay_amount,
             lender_pubkey,
             offer_id,
+            extend_duration,
         } = self;
 
         is_initialized_dst[0] = *is_initialized as u8;
@@ -229,5 +240,6 @@ impl Pack for Loan {
         *pay_amount_dst = pay_amount.to_le_bytes();
         lender_pubkey_dst.copy_from_slice(lender_pubkey.as_ref());
         offer_id_dst.copy_from_slice(offer_id.as_ref());
+        *extend_duration_dst = extend_duration.to_le_bytes();
     }
 }

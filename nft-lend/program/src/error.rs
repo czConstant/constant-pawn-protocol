@@ -22,6 +22,8 @@ pub enum LendingError {
     LoanInvalidStatus,
     #[error("Invalid admin wallet")]
     InvalidAdminWallet,
+    #[error("offer has expired")]
+    OfferHasExpired,
 }
 
 impl From<LendingError> for ProgramError {

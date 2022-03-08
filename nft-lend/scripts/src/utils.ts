@@ -71,6 +71,7 @@ export interface LoanInfoLayout {
   payAmount: bigint,
   lenderPubkey: PublicKey,
   offerInfo: PublicKey,
+  extendDuration: bigint,
 }
 
 export const LOAN_INFO_LAYOUT = struct<LoanInfoLayout>([
@@ -88,6 +89,7 @@ export const LOAN_INFO_LAYOUT = struct<LoanInfoLayout>([
   u64("payAmount"),
   publicKey("lenderPubkey"),
   publicKey("offerInfo"),
+  u64("extendDuration"),
 ]);
 
 export interface OfferInfoLayout {
@@ -102,6 +104,7 @@ export interface OfferInfoLayout {
   status: number;
   paidAt: bigint;
   paidAmount: bigint;
+  expired: bigint;
 }
 
 export const OFFER_INFO_LAYOUT = struct<OfferInfoLayout>([
@@ -116,6 +119,7 @@ export const OFFER_INFO_LAYOUT = struct<OfferInfoLayout>([
   u8("status"),
   u64("paidAt"),
   u64("paidAmount"),
+  u64("expired"),
 ]);
 
 

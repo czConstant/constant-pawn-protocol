@@ -1,15 +1,9 @@
-import { AccountLayout, Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram, Transaction
+  Connection, PublicKey
 } from "@solana/web3.js";
 import {
-  getKeypair,
   getProgramId,
-  getPublicKey,
-  getTerms, LOAN_INFO_LAYOUT, LoanInfoLayout
+  getPublicKey, LoanInfoLayout, LOAN_INFO_LAYOUT
 } from "./utils";
 import BN = require("bn.js");
 

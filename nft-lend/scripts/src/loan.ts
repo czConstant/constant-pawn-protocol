@@ -175,7 +175,7 @@ const loan = async () => {
     },
   ]);
 
-  console.log("xong");
+  console.log("done");
 };
 
 loan();

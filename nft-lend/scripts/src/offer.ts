@@ -5,10 +5,10 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  Transaction, SYSVAR_CLOCK_PUBKEY,
+  Transaction
 } from "@solana/web3.js";
 import {
-  CancelOfferInstruction, getKeypair,
+  getKeypair,
   getProgramId,
   getPublicKey,
   getTerms,
@@ -140,7 +140,7 @@ const offer = async () => {
   ]);
 
   //
-  console.log("xong");
+  console.log("done");
 };
 
 offer();

@@ -1,26 +1,17 @@
-import { AccountLayout, Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  Transaction
+  Connection, PublicKey, Transaction
 } from "@solana/web3.js";
 import {
-  getKeypair,
+  CancelLoanInstruction, getKeypair,
   getProgramId,
   getPublicKey,
-  getTerms,
-  getTokenBalance, InitLoanInstruction, LoanInfoLayout,
-  LOAN_INFO_LAYOUT, logError,
-  writePublicKey, CancelLoanInstruction
+  getTerms
 } from "./utils";
 import BN = require("bn.js");
 
 const loan = async () => {
   const lendingProgramId = getProgramId();
-  const terms = getTerms();
   const nft_mint_pubkey = getPublicKey("mint_x");
   const borrower_account = getKeypair("alice");
   const borrower_nft_account_pubkey = (
@@ -56,7 +47,7 @@ const loan = async () => {
   );
 
   //
-  console.log("xong");
+  console.log("done");
 };
 
 loan();

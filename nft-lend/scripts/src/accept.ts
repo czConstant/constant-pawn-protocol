@@ -1,20 +1,12 @@
-import { AccountLayout, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  Transaction, SYSVAR_CLOCK_PUBKEY,
+  Connection, PublicKey, SYSVAR_CLOCK_PUBKEY, Transaction
 } from "@solana/web3.js";
 import {
-  getKeypair,
+  AcceptOfferInstruction, getKeypair,
   getProgramId,
   getPublicKey,
-  getTerms,
-  getTokenBalance, InitLoanInstruction, LoanInfoLayout,
-  LOAN_INFO_LAYOUT, logError,
-  writePublicKey, AcceptOfferInstruction
+  getTerms
 } from "./utils";
 import BN = require("bn.js");
 
@@ -62,7 +54,7 @@ const accept_offer = async () => {
   );
 
   //
-  console.log("xong");
+  console.log("Done");
 };
 
 accept_offer();
