@@ -196,6 +196,7 @@ export interface InitOfferInstructionData {
   loan_duration: bigint,
   interest_rate: bigint,
   loan_currency: PublicKey,
+  expired: bigint,
 }
 export const initOfferInstructionData = struct<InitOfferInstructionData>([
   u8('instruction'),
@@ -204,6 +205,7 @@ export const initOfferInstructionData = struct<InitOfferInstructionData>([
   u64('loan_duration'),
   u64('interest_rate'),
   publicKey('loan_currency'),
+  u64('expired'),
 ]);
 
 
@@ -215,12 +217,12 @@ export function InitOfferInstruction(
   offer_info_account: PublicKey,
   sys_var_rent: PublicKey,
   token_program: PublicKey,
-
   loan_id: PublicKey,
   loan_principal_amount: bigint,
   loan_duration: bigint,
   interest_rate: bigint,
   loan_currency: PublicKey,
+  expired: bigint,
 ): TransactionInstruction {
   const keys = [
     { pubkey: lender_account, isSigner: true, isWritable: false },
@@ -241,7 +243,8 @@ export function InitOfferInstruction(
       loan_principal_amount: loan_principal_amount,
       loan_duration: loan_duration,
       interest_rate: interest_rate,
-      loan_currency: loan_currency
+      loan_currency: loan_currency,
+      expired: expired,
     },
     data
   );
