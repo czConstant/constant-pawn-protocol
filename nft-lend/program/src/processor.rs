@@ -330,9 +330,9 @@ impl Processor {
         let pda_account = next_account_info(account_info_iter)?;
 
         let clock = Clock::from_account_info(next_account_info(account_info_iter)?)?;
-        if offer_info.expired > 0 && offer_info.expired < clock.unix_timestamp as u64 {
-            return Err(LendingError::OfferHasExpired.into());
-        }
+        // if offer_info.expired > 0 && offer_info.expired < clock.unix_timestamp as u64 {
+        //     return Err(LendingError::OfferHasExpired.into());
+        // }
         let transfer_token_to_borrower_ix = spl_token::instruction::transfer(
             token_program.key,
             pda_token_account.key,
