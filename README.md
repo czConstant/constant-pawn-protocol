@@ -258,4 +258,21 @@ You can then run the following command to test transactions.
 npm run loan|offer|pay....
 ```
 
+The main flow:
+```
+npm run loan
+npm run offer
+npm run accept_offer
+npm run pay
+npm run close_offer
+```
+
+Some information on devnet :
+
+Program address: `8HMWC37seYPvhyEmXjCiEx6uhNt7mqVFmvvpSR9SWpGw` 
+
+Token Y address: `CuJAxXZWkL2p2A7fvjyQHurE2ttstuzd4XVPmvvrxPCv` this token is used as USDC on devnet
+
+Feel free to use Alice|Bob account(pub & private key in keys folder, it has some NFT and token Y) to create loan, offer, pay ....
+
 See the `package.json` file for more.
