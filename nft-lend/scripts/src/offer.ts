@@ -25,7 +25,9 @@ const offer = async () => {
   const lender_usd_account_pubkey = getPublicKey("bob_y");
   const usd_mint_pubkey = getPublicKey("mint_y");
   const lender_account = getKeypair("bob");
-  const expired = BigInt(60488);//7days
+  let expired = (new Date().getTime()) / 1000;
+  expired = parseInt(expired + "") + 604800;//7days
+  console.log(expired);
   const temp_usd_account = new Keypair();
   const connection = new Connection("https://api.devnet.solana.com", 'singleGossip');
   const createTempTokenAccountIx = SystemProgram.createAccount({
@@ -75,7 +77,7 @@ const offer = async () => {
     terms.loanDuration,
     terms.interestRate,
     usd_mint_pubkey,
-    expired,
+    BigInt(expired),
   )
 
   const tx = new Transaction().add(

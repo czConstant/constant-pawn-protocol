@@ -11,7 +11,7 @@
     "offer": "npm run compile && node build/offer.js",
     "order": "npm run compile && node build/order.js",
     "cancel_offer": "npm run compile && node build/cancel_offer.js",
-    "accept": "npm run compile && node build/accept.js",
+    "accept_offer": "npm run compile && node build/accept.js",
     "pay": "npm run compile && node build/pay.js",
     "repay": "npm run compile && node build/loan.js&& node build/offer.js && node build/accept.js && node build/pay.js",
     "liquidate": "npm run compile && node build/liquidate.js",
