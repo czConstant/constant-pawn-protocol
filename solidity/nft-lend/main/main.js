@@ -36,7 +36,7 @@ async function main() {
         var _loanERC20Denomination = '0xd27e714b8810ade3eb5559827036ffc69bbaa6b6'
         var _lender = '0xDD14F32A7550CD51F0F405D5199f7Ec93e08E7d7'
         var _interestIsProRated = true
-        var chainId = '1'
+        var chainId = '1337'
 
         // uint256 _loanPrincipalAmount,
         // uint256 _maximumRepaymentAmount,

@@ -4,15 +4,10 @@ import "./openzeppelin/ERC20.sol";
 import "./openzeppelin/Context.sol";
 
 contract TESTToken is ERC20 {
-
-    uint8 _decimals;
-
-    constructor(string memory name, string memory symbol, uint8 decimals) ERC20(name, symbol) {
-        _decimals = decimals;
-    }
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
     function decimals() public view virtual override returns (uint8) {
-        return _decimals;
+        return 6;
     }
 
     function faucet(address user, uint256 amount) public virtual {

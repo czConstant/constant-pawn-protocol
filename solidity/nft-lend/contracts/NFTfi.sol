@@ -99,6 +99,8 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         address loanERC20Denomination;
         // The address of the borrower.
         address borrower;
+        // The address of the borrower.
+        address lender;
     }
 
     /* ****** */
@@ -365,6 +367,21 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
     //         _loanInterestRateForDurationInBasisPoints, _lenderNonce,
     //         _nftCollateralContract, _loanERC20Denomination, _lender,
     //         _interestIsProRated.
+
+    function beginLoan1(
+        uint256 _loanPrincipalAmount,
+        uint256 _maximumRepaymentAmount,
+        uint256 _nftCollateralId,
+        uint256 _loanDuration,
+        uint256 _loanInterestRateForDurationInBasisPoints,
+        uint256 _adminFeeInBasisPoints,
+        uint256[2] memory _borrowerAndLenderNonces,
+        address _nftCollateralContract,
+        address _loanERC20Denomination,
+        address _lender,
+        bytes[2] memory _borrowerAndLenderSignature
+    ) public whenNotPaused nonReentrant {}
+
     function beginLoan(
         uint256 _loanPrincipalAmount,
         uint256 _maximumRepaymentAmount,
@@ -413,6 +430,7 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         loan.nftCollateralContract = _nftCollateralContract;
         loan.loanERC20Denomination = _loanERC20Denomination;
         loan.borrower = msg.sender;
+        loan.lender = _lender;
 
         // Sanity check loan values.
         require(
@@ -576,7 +594,9 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         );
 
         // Fetch current owner of loan promissory note.
-        address lender;
+        /** TODO */
+        //DUYNQ: need to get lender here
+        address lender = loan.lender;
 
         // Calculate amounts to send to lender and admins
         uint256 interestDue = (loan.maximumRepaymentAmount).sub(
@@ -680,7 +700,9 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
 
         // Fetch the current lender of the promissory note corresponding to
         // this overdue loan.
-        address lender;
+        /** TODO */
+        //DUYNQ: need to get lender here
+        address lender = loan.lender;
 
         // Mark loan as liquidated before doing any external transfers to
         // follow the Checks-Effects-Interactions design pattern.
