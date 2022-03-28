@@ -62,24 +62,22 @@ contract("NFTfi", function (accounts) {
     await usdToken.approve(nftfi.address, web3.utils.toWei('1000000', 'ether'), { from: _lender })
 
     var _loanPrincipalAmount = web3.utils.toWei('1000', 'ether')
-    var _maximumRepaymentAmount = web3.utils.toWei('1200', 'ether')
     var _loanDuration = '3600'
-    var _loanInterestRateForDurationInBasisPoints = '2'
-    var _adminFeeInBasisPoints = '25'
+    var _loanInterestRate = '2'
+    var _adminFee = '25'
     var _lenderNonce = '1'
     var _nftCollateralContract = nft.address
-    var _loanERC20Denomination = usdToken.address
+    var _loanCurrency = usdToken.address
 
     let lenderMsg = web3.utils.soliditySha3(
       _loanPrincipalAmount,
-      _maximumRepaymentAmount,
       _nftCollateralId,
       _loanDuration,
-      _loanInterestRateForDurationInBasisPoints,
-      _adminFeeInBasisPoints,
+      _loanInterestRate,
+      _adminFee,
       _lenderNonce,
       _nftCollateralContract,
-      _loanERC20Denomination,
+      _loanCurrency,
       _lender,
       chainId,
     );
@@ -101,33 +99,17 @@ contract("NFTfi", function (accounts) {
 
     await nftfi.beginLoan(
       _loanPrincipalAmount,
-      _maximumRepaymentAmount,
       _nftCollateralId,
       _loanDuration,
-      _loanInterestRateForDurationInBasisPoints,
-      _adminFeeInBasisPoints,
+      _loanInterestRate,
+      _adminFee,
       [_borrowerNonce, _lenderNonce],
       _nftCollateralContract,
-      _loanERC20Denomination,
+      _loanCurrency,
       _lender,
       [borrowerSig.signature, lenderSig.signature],
       { from: _borrower }
     );
-
-
-    // await nftfi.beginLoan1(
-    //   _loanPrincipalAmount,
-    //   _maximumRepaymentAmount,
-    //   _nftCollateralId,
-    //   _loanDuration,
-    //   _loanInterestRateForDurationInBasisPoints,
-    //   _adminFeeInBasisPoints,
-    //   [_borrowerNonce, _lenderNonce],
-    //   _nftCollateralContract,
-    //   _loanERC20Denomination,
-    //   _lender,
-    //   [borrowerSig.signature, lenderSig.signature],
-    // );
 
     return assert.isTrue(true);
   });

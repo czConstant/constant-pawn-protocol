@@ -61,131 +61,51 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         // continuously increasing parameter totalNumLoans.
         uint256 loanId;
         // The original sum of money transferred from lender to borrower at the
-        // beginning of the loan, measured in loanERC20Denomination's smallest
-        // units.
+        // beginning of the loan, measured in loanERC20Denomination's smallest units.
         uint256 loanPrincipalAmount;
-        // The maximum amount of money that the borrower would be required to
-        // repay retrieve their collateral, measured in loanERC20Denomination's
-        // smallest units. If interestIsProRated is set to false, then the
-        // borrower will always have to pay this amount to retrieve their
-        // collateral, regardless of whether they repay early.
-        uint256 maximumRepaymentAmount;
+        // The amount of time (measured in seconds) that can elapse before the
+        // lender can liquidate the loan and seize the underlying collateral.
+        uint32 loanDuration;
+        // The interest rate
+        uint32 loanInterestRate;
         // The ID within the NFTCollateralContract for the NFT being used as
         // collateral for this loan. The NFT is stored within this contract
         // during the duration of the loan.
         uint256 nftCollateralId;
         // The block.timestamp when the loan first began (measured in seconds).
         uint64 loanStartTime;
-        // The amount of time (measured in seconds) that can elapse before the
-        // lender can liquidate the loan and seize the underlying collateral.
-        uint32 loanDuration;
-        // If interestIsProRated is set to true, then this is the interest rate
-        // (measured in basis points, e.g. hundreths of a percent) for the loan,
-        // that must be repaid pro-rata by the borrower at the conclusion of
-        // the loan or risk seizure of their nft collateral. Note that if
-        // interestIsProRated is set to false, then this value is not used and
-        // is irrelevant.
-        uint32 loanInterestRateForDurationInBasisPoints;
-        // The percent (measured in basis points) of the interest earned that
-        // will be taken as a fee by the contract admins when the loan is
-        // repaid. The fee is stored here to prevent an attack where the
-        // contract admins could adjust the fee right before a loan is repaid,
-        // and take all of the interest earned.
-        uint32 loanAdminFeeInBasisPoints;
+        // admin fee  (ex: input 1 ~1%)
+        uint32 loanAdminFee;
         // The ERC721 contract of the NFT collateral
         address nftCollateralContract;
         // The ERC20 contract of the currency being used as principal/interest
         // for this loan.
-        address loanERC20Denomination;
+        address loanCurrency;
         // The address of the borrower.
         address borrower;
         // The address of the borrower.
         address lender;
+        // the nonce of the borrower
+        uint256 nonce;
     }
 
     /* ****** */
     /* EVENTS */
     /* ****** */
 
-    // @notice This event is fired whenever a borrower begins a loan by calling
-    //         NFTfi.beginLoan(), which can only occur after both the lender
-    //         and borrower have approved their ERC721 and ERC20 contracts to
-    //         use NFTfi, and when they both have signed off-chain messages that
-    //         agree on the terms of the loan.
-    // @param  loanId - A unique identifier for this particular loan, sourced
-    //         from the continuously increasing parameter totalNumLoans.
-    // @param  borrower - The address of the borrower.
-    // @param  lender - The address of the lender. The lender can change their
-    //         address by transferring the NFTfi ERC721 token that they
-    //         received when the loan began.
-    // @param  loanPrincipalAmount - The original sum of money transferred from
-    //         lender to borrower at the beginning of the loan, measured in
-    //         loanERC20Denomination's smallest units.
-    // @param  maximumRepaymentAmount - The maximum amount of money that the
-    //         borrower would be required to retrieve their collateral. If
-    //         interestIsProRated is set to false, then the borrower will
-    //         always have to pay this amount to retrieve their collateral.
-    // @param  nftCollateralId - The ID within the NFTCollateralContract for the
-    //         NFT being used as collateral for this loan. The NFT is stored
-    //         within this contract during the duration of the loan.
-    // @param  loanStartTime - The block.timestamp when the loan first began
-    //         (measured in seconds).
-    // @param  loanDuration - The amount of time (measured in seconds) that can
-    //         elapse before the lender can liquidate the loan and seize the
-    //         underlying collateral NFT.
-    // @param  loanInterestRateForDurationInBasisPoints - If interestIsProRated
-    //         is set to true, then this is the interest rate (measured in
-    //         basis points, e.g. hundreths of a percent) for the loan, that
-    //         must be repaid pro-rata by the borrower at the conclusion of the
-    //         loan or risk seizure of their nft collateral. Note that if
-    //         interestIsProRated is set to false, then this value is not used
-    //         and is irrelevant.
-    // @param  nftCollateralContract - The ERC721 contract of the NFT collateral
-    // @param  loanERC20Denomination - The ERC20 contract of the currency being
-    //         used as principal/interest for this loan.
-    // @param  interestIsProRated - A boolean value determining whether the
-    //         interest will be pro-rated if the loan is repaid early, or
-    //         whether the borrower will simply pay maximumRepaymentAmount.
     event LoanStarted(
         uint256 loanId,
         address borrower,
         address lender,
         uint256 loanPrincipalAmount,
-        uint256 maximumRepaymentAmount,
         uint256 nftCollateralId,
         uint256 loanStartTime,
         uint256 loanDuration,
-        uint256 loanInterestRateForDurationInBasisPoints,
+        uint256 loanInterestRate,
         address nftCollateralContract,
-        address loanERC20Denomination
+        address loanCurrency
     );
 
-    // @notice This event is fired whenever a borrower successfully repays
-    //         their loan, paying principal-plus-interest-minus-fee to the
-    //         lender in loanERC20Denomination, paying fee to owner in
-    //         loanERC20Denomination, and receiving their NFT collateral back.
-    // @param  loanId - A unique identifier for this particular loan, sourced
-    //         from the continuously increasing parameter totalNumLoans.
-    // @param  borrower - The address of the borrower.
-    // @param  lender - The address of the lender. The lender can change their
-    //         address by transferring the NFTfi ERC721 token that they
-    //         received when the loan began.
-    // @param  loanPrincipalAmount - The original sum of money transferred from
-    //         lender to borrower at the beginning of the loan, measured in
-    //         loanERC20Denomination's smallest units.
-    // @param  nftCollateralId - The ID within the NFTCollateralContract for the
-    //         NFT being used as collateral for this loan. The NFT is stored
-    //         within this contract during the duration of the loan.
-    // @param  amountPaidToLender The amount of ERC20 that the borrower paid to
-    //         the lender, measured in the smalled units of
-    //         loanERC20Denomination.
-    // @param  adminFee The amount of interest paid to the contract admins,
-    //         measured in the smalled units of loanERC20Denomination and
-    //         determined by adminFeeInBasisPoints. This amount never exceeds
-    //         the amount of interest earned.
-    // @param  nftCollateralContract - The ERC721 contract of the NFT collateral
-    // @param  loanERC20Denomination - The ERC20 contract of the currency being
-    //         used as principal/interest for this loan.
     event LoanRepaid(
         uint256 loanId,
         address borrower,
@@ -195,30 +115,9 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         uint256 amountPaidToLender,
         uint256 adminFee,
         address nftCollateralContract,
-        address loanERC20Denomination
+        address loanCurrencry
     );
 
-    // @notice This event is fired whenever a lender liquidates an outstanding
-    //         loan that is owned to them that has exceeded its duration. The
-    //         lender receives the underlying NFT collateral, and the borrower
-    //         no longer needs to repay the loan principal-plus-interest.
-    // @param  loanId - A unique identifier for this particular loan, sourced
-    //         from the continuously increasing parameter totalNumLoans.
-    // @param  borrower - The address of the borrower.
-    // @param  lender - The address of the lender. The lender can change their
-    //         address by transferring the NFTfi ERC721 token that they
-    //         received when the loan began.
-    // @param  loanPrincipalAmount - The original sum of money transferred from
-    //         lender to borrower at the beginning of the loan, measured in
-    //         loanERC20Denomination's smallest units.
-    // @param  nftCollateralId - The ID within the NFTCollateralContract for the
-    //         NFT being used as collateral for this loan. The NFT is stored
-    //         within this contract during the duration of the loan.
-    // @param  loanMaturityDate - The unix time (measured in seconds) that the
-    //         loan became due and was eligible for liquidation.
-    // @param  loanLiquidationDate - The unix time (measured in seconds) that
-    //         liquidation occurred.
-    // @param  nftCollateralContract - The ERC721 contract of the NFT collateral
     event LoanLiquidated(
         uint256 loanId,
         address borrower,
@@ -252,23 +151,6 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
     //         liquidate the same loan twice.
     mapping(uint256 => bool) public loanRepaidOrLiquidated;
 
-    // @notice A mapping that takes both a user's address and a loan nonce
-    //         that was first used when signing an off-chain order and checks
-    //         whether that nonce has previously either been used for a loan,
-    //         or has been pre-emptively cancelled. The nonce referred to here
-    //         is not the same as an Ethereum account's nonce. We are referring
-    //         instead to nonces that are used by both the lender and the
-    //         borrower when they are first signing off-chain NFTfi orders.
-    //         These nonces can be any uint256 value that the user has not
-    //         previously used to sign an off-chain order. Each nonce can be
-    //         used at most once per user within NFTfi, regardless of whether
-    //         they are the lender or the borrower in that situation. This
-    //         serves two purposes. First, it prevents replay attacks where an
-    //         attacker would submit a user's off-chain order more than once.
-    //         Second, it allows a user to cancel an off-chain order by calling
-    //         NFTfi.cancelLoanCommitmentBeforeLoanHasBegun(), which marks the
-    //         nonce as used and prevents any future loan from using the user's
-    //         off-chain order that contains that nonce.
     mapping(address => mapping(uint256 => bool))
         private _nonceHasBeenUsedForUser;
 
@@ -368,75 +250,36 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
     //         _nftCollateralContract, _loanERC20Denomination, _lender,
     //         _interestIsProRated.
 
-    function beginLoan1(
-        uint256 _loanPrincipalAmount,
-        uint256 _maximumRepaymentAmount,
-        uint256 _nftCollateralId,
-        uint256 _loanDuration,
-        uint256 _loanInterestRateForDurationInBasisPoints,
-        uint256 _adminFeeInBasisPoints,
-        uint256[2] memory _borrowerAndLenderNonces,
-        address _nftCollateralContract,
-        address _loanERC20Denomination,
-        address _lender,
-        bytes[2] memory _borrowerAndLenderSignature
-    ) public whenNotPaused nonReentrant {}
-
     function beginLoan(
         uint256 _loanPrincipalAmount,
-        uint256 _maximumRepaymentAmount,
         uint256 _nftCollateralId,
         uint256 _loanDuration,
-        uint256 _loanInterestRateForDurationInBasisPoints,
-        uint256 _adminFeeInBasisPoints,
+        uint256 _loanInterestRate,
+        uint256 _adminFee,
         uint256[2] memory _borrowerAndLenderNonces,
         address _nftCollateralContract,
-        address _loanERC20Denomination,
+        address _loanCurrency,
         address _lender,
         bytes[2] memory _borrowerAndLenderSignature
     ) public whenNotPaused nonReentrant {
         bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
         bytes memory _lenderSignature = _borrowerAndLenderSignature[1];
-        // Save loan details to a struct in memory first, to save on gas if any
-        // of the below checks fail, and to avoid the "Stack Too Deep" error by
-        // clumping the parameters together into one struct held in memory.
-        // Loan memory loan = Loan({
-        //     loanId: totalNumLoans, //currentLoanId,
-        //     loanPrincipalAmount: _loanPrincipalAmount,
-        //     maximumRepaymentAmount: _maximumRepaymentAmount,
-        //     nftCollateralId: _nftCollateralId,
-        //     loanStartTime: uint64(block.timestamp), //_loanStartTime
-        //     loanDuration: uint32(_loanDuration),
-        //     loanInterestRateForDurationInBasisPoints: uint32(
-        //         _loanInterestRateForDurationInBasisPoints
-        //     ),
-        //     loanAdminFeeInBasisPoints: uint32(_adminFeeInBasisPoints),
-        //     nftCollateralContract: _nftCollateralContract,
-        //     loanERC20Denomination: _loanERC20Denomination,
-        //     borrower: msg.sender
-        // });
+
         Loan memory loan;
 
         loan.loanId = totalNumLoans; //currentLoanId,
         loan.loanPrincipalAmount = _loanPrincipalAmount;
-        loan.maximumRepaymentAmount = _maximumRepaymentAmount;
         loan.nftCollateralId = _nftCollateralId;
         loan.loanStartTime = uint64(block.timestamp); //_loanStartTime
         loan.loanDuration = uint32(_loanDuration);
-        loan.loanInterestRateForDurationInBasisPoints = uint32(
-            _loanInterestRateForDurationInBasisPoints
-        );
-        loan.loanAdminFeeInBasisPoints = uint32(_adminFeeInBasisPoints);
+        loan.loanInterestRate = uint32(_loanInterestRate);
+        loan.loanAdminFee = uint32(_adminFee);
         loan.nftCollateralContract = _nftCollateralContract;
-        loan.loanERC20Denomination = _loanERC20Denomination;
+        loan.loanCurrency = _loanCurrency;
         loan.borrower = msg.sender;
         loan.lender = _lender;
 
         // Sanity check loan values.
-        require(
-            loan.maximumRepaymentAmount >= loan.loanPrincipalAmount,
-            "Negative interest rate loans are not allowed."
-        );
         require(
             uint256(loan.loanDuration) <= maximumLoanDuration,
             "Loan duration exceeds maximum loan duration"
@@ -446,20 +289,20 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
             "Loan duration cannot be zero"
         );
         require(
-            uint256(loan.loanAdminFeeInBasisPoints) == adminFeeInBasisPoints,
+            uint256(loan.loanAdminFee) == adminFeeInBasisPoints,
             "The admin fee has changed since this order was signed."
         );
 
         // Check that both the collateral and the principal come from supported
         // contracts.
         require(
-            erc20CurrencyIsWhitelisted[loan.loanERC20Denomination],
+            erc20CurrencyIsWhitelisted[loan.loanCurrency],
             "Currency denomination is not whitelisted to be used by this contract"
         );
-        require(
-            nftContractIsWhitelisted[loan.nftCollateralContract],
-            "NFT collateral contract is not whitelisted to be used by this contract"
-        );
+        // require(
+        //     nftContractIsWhitelisted[loan.nftCollateralContract],
+        //     "NFT collateral contract is not whitelisted to be used by this contract"
+        // );
 
         // Check loan nonces. These are different from Ethereum account nonces.
         // Here, these are uint256 numbers that should uniquely identify
@@ -494,14 +337,13 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         require(
             isValidLenderSignature(
                 loan.loanPrincipalAmount,
-                loan.maximumRepaymentAmount,
                 loan.nftCollateralId,
                 loan.loanDuration,
-                loan.loanInterestRateForDurationInBasisPoints,
-                loan.loanAdminFeeInBasisPoints,
+                loan.loanInterestRate,
+                loan.loanAdminFee,
                 _borrowerAndLenderNonces[1], //_lenderNonce,
                 loan.nftCollateralContract,
-                loan.loanERC20Denomination,
+                loan.loanCurrency,
                 _lender,
                 _lenderSignature
             ),
@@ -529,7 +371,7 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         );
 
         // Transfer principal from lender to borrower.
-        IERC20(loan.loanERC20Denomination).transferFrom(
+        IERC20(loan.loanCurrency).transferFrom(
             _lender,
             msg.sender,
             loan.loanPrincipalAmount
@@ -545,13 +387,12 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
             msg.sender, //borrower,
             _lender,
             loan.loanPrincipalAmount,
-            loan.maximumRepaymentAmount,
             loan.nftCollateralId,
             block.timestamp, //_loanStartTime
             loan.loanDuration,
-            loan.loanInterestRateForDurationInBasisPoints,
+            loan.loanInterestRate,
             loan.nftCollateralContract,
-            loan.loanERC20Denomination
+            loan.loanCurrency
         );
     }
 
@@ -599,13 +440,23 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         address lender = loan.lender;
 
         // Calculate amounts to send to lender and admins
-        uint256 interestDue = (loan.maximumRepaymentAmount).sub(
-            loan.loanPrincipalAmount
+        /** TODO 
+        need calculate same solona full interest + 50% remain time
+        */
+        // uint256 interestDue = (loan.maximumRepaymentAmount).sub(
+        //     loan.loanPrincipalAmount
+        // );
+
+        uint256 interestDue = _computeInterestDue(
+            loan.loanPrincipalAmount,
+            loan.loanInterestRate,
+            (uint256(block.timestamp)).sub(loan.loanStartTime),
+            loan.loanDuration
         );
 
         uint256 adminFee = _computeAdminFee(
             interestDue,
-            uint256(loan.loanAdminFeeInBasisPoints)
+            uint256(loan.loanAdminFee)
         );
         uint256 payoffAmount = ((loan.loanPrincipalAmount).add(interestDue))
             .sub(adminFee);
@@ -618,14 +469,14 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         totalActiveLoans = totalActiveLoans.sub(1);
 
         // Transfer principal-plus-interest-minus-fees from borrower to lender
-        IERC20(loan.loanERC20Denomination).transferFrom(
+        IERC20(loan.loanCurrency).transferFrom(
             loan.borrower,
             lender,
             payoffAmount
         );
 
         // Transfer fees from borrower to admins
-        IERC20(loan.loanERC20Denomination).transferFrom(
+        IERC20(loan.loanCurrency).transferFrom(
             loan.borrower,
             owner(),
             adminFee
@@ -654,7 +505,7 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
             payoffAmount,
             adminFee,
             loan.nftCollateralContract,
-            loan.loanERC20Denomination
+            loan.loanCurrency
         );
 
         // Delete the loan from storage in order to achieve a substantial gas
@@ -788,10 +639,10 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
     // @return The amount of the specified ERC20 currency required to pay back
     //         this loan, measured in the smallest unit of the specified ERC20
     //         currency.
-    function getPayoffAmount(uint256 _loanId) public view returns (uint256) {
-        Loan storage loan = loanIdToLoan[_loanId];
-        return loan.maximumRepaymentAmount;
-    }
+    // function getPayoffAmount(uint256 _loanId) public view returns (uint256) {
+    //     Loan storage loan = loanIdToLoan[_loanId];
+    //     return loan.maximumRepaymentAmount;
+    // }
 
     // @notice This function can be used to view whether a particular nonce
     //         for a particular user has already been used, either from a
@@ -848,25 +699,32 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
     //         the ERC20 currency used to pay this loan.
     function _computeInterestDue(
         uint256 _loanPrincipalAmount,
-        uint256 _maximumRepaymentAmount,
+        uint256 _loanInterestRate,
         uint256 _loanDurationSoFarInSeconds,
-        uint256 _loanTotalDurationAgreedTo,
-        uint256 _loanInterestRateForDurationInBasisPoints
+        uint256 _loanTotalDurationAgreedTo
     ) internal pure returns (uint256) {
+        if (_loanDurationSoFarInSeconds > _loanTotalDurationAgreedTo) {
+            _loanDurationSoFarInSeconds = _loanTotalDurationAgreedTo;
+        }
+        uint256 totalLoanDay = _loanTotalDurationAgreedTo.div(86400);
+        uint256 sofarLoanDay = (_loanDurationSoFarInSeconds.div(86400)).add(1);
+        if (sofarLoanDay > totalLoanDay) {
+            sofarLoanDay = totalLoanDay;
+        }
         uint256 interestDueAfterEntireDuration = (
-            _loanPrincipalAmount.mul(_loanInterestRateForDurationInBasisPoints)
+            _loanPrincipalAmount.mul(_loanInterestRate)
         ).div(uint256(10000));
         uint256 interestDueAfterElapsedDuration = (
-            interestDueAfterEntireDuration.mul(_loanDurationSoFarInSeconds)
-        ).div(_loanTotalDurationAgreedTo);
-        if (
-            _loanPrincipalAmount.add(interestDueAfterElapsedDuration) >
-            _maximumRepaymentAmount
-        ) {
-            return _maximumRepaymentAmount.sub(_loanPrincipalAmount);
-        } else {
-            return interestDueAfterElapsedDuration;
-        }
+            interestDueAfterEntireDuration.mul(sofarLoanDay)
+        ).div(totalLoanDay);
+
+        uint256 remainInterestDueAfterElapsedDuration = interestDueAfterEntireDuration
+                .sub(interestDueAfterElapsedDuration);
+
+        return
+            interestDueAfterElapsedDuration.add(
+                remainInterestDueAfterElapsedDuration.div(2)
+            );
     }
 
     // @notice A convenience function computing the adminFee taken from a
@@ -887,6 +745,16 @@ contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
         uint256 _adminFeeInBasisPoints
     ) internal pure returns (uint256) {
         return (_interestDue.mul(_adminFeeInBasisPoints)).div(10000);
+    }
+
+    function _computeLoanInterest(
+        uint256 _loanPrincipleAmount,
+        uint256 _loanInterestRate,
+        uint256 _loanStared,
+        uint256 _loanDuration,
+        uint256 _payDate
+    ) internal pure returns (uint256) {
+        return 0;
     }
 
     // @notice We call this function when we wish to transfer an NFT from our
