@@ -20,6 +20,8 @@
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 // var mnemonic = "end cloud any speed come federal alert tunnel grape sauce stadium good";
+
+// 0xaC9357969b310614DbfD7bdF513727896c86ED33
 var mnemonic = "normal mystery ball embody blue cave abstract tray life home bread ostrich"
 
 // var privateKey = "ff67a58ea6996f5f1895462929031bd8b0ca64cfe0439f6bc6530c0225179e33"; //lender
@@ -52,14 +54,14 @@ module.exports = {
       network_id: "*",       // Any network (default: none)
       gas: 6000000,
     },
-    // mumbai: {
-    //   provider: function () {
-    //     return new HDWalletProvider(mnemonic, "https://rpc-mumbai.maticvigil.com/v1/a815d432597b6045371ea97a2a258a0a88354cb0");
-    //   },
-    //   network_id: "*",       // Any network (default: none)
-    //   gas: 9000000,
-    //   gasPrice: 3 * (10 ** 9),
-    // },
+    mumbai: {
+      provider: function () {
+        return new HDWalletProvider(mnemonic, "https://rpc-mumbai.maticvigil.com/v1/a815d432597b6045371ea97a2a258a0a88354cb0");
+      },
+      network_id: "*",       // Any network (default: none)
+      gas: 8000000,
+      // gasPrice: 3 * (10 ** 9),
+    },
     // bsc_testnet: {
     //   provider: function () {
     //     return new HDWalletProvider([privateKey], "https://data-seed-prebsc-2-s2.binance.org:8545/");

@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 import "./openzeppelin/ECDSA.sol";
 
-contract NFTfiSigningUtils {
+contract NFTPawnSigningUtils {
     /* *********** */
     /* CONSTRUCTOR */
     /* *********** */

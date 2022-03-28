@@ -1,4 +1,4 @@
-const NFTfi = artifacts.require("NFTfi");
+const NFTPawn = artifacts.require("NFTPawn");
 const TESTToken = artifacts.require("TESTToken");
 const TESTNft = artifacts.require("TESTNft");
 const TestChain = artifacts.require("TestChain");
@@ -35,17 +35,20 @@ const TestChain = artifacts.require("TestChain");
 // (8) 0xc21245cff289413bb13d6b386c5de1f6d38501e9cf0008e7a453923977af5da1
 // (9) 0x072a99164c4cb154b7f315d3ff14e50ad689ffd06819bd30f1a1d58617f9b23b
 
-contract("NFTfi", function (accounts) {
+contract("NFTPawn", function (accounts) {
   it("should assert true", async function () {
     let testChain = await TestChain.new()
     let chainId = await testChain.getTestChainID()
 
     let usdToken = await TESTToken.new('USDCToken', 'USDC');
     let nft = await TESTNft.new('World', 'World');
-    let nftfi = await NFTfi.new();
+    let nftPawn = await NFTPawn.new();
+    // let nftfi = await NFTfi.at('0xC618ED0213b7370D02dF331474Bd727B5fB02dAc');
 
-    await nftfi.whitelistERC20Currency(usdToken.address, true)
-    await nftfi.whitelistNFTContract(nft.address, true)
+    // let usdToken = await TESTToken.at('0x0bB8Fe1750FF276d20c8A7D03E012034dB218941')
+
+    await nftPawn.whitelistERC20Currency(usdToken.address, true)
+    await nftPawn.whitelistNFTContract(nft.address, true)
 
     var _borrower = accounts[8]
     var _lender = accounts[9]
@@ -58,13 +61,13 @@ contract("NFTfi", function (accounts) {
     await nft.faucet(_borrower, _nftCollateralId)
     await usdToken.faucet(_lender, web3.utils.toWei('10000', 'ether'))
 
-    await nft.setApprovalForAll(nftfi.address, true, { from: _borrower })
-    await usdToken.approve(nftfi.address, web3.utils.toWei('1000000', 'ether'), { from: _lender })
+    await nft.setApprovalForAll(nftPawn.address, true, { from: _borrower })
+    await usdToken.approve(nftPawn.address, web3.utils.toWei('1000000', 'ether'), { from: _lender })
 
     var _loanPrincipalAmount = web3.utils.toWei('1000', 'ether')
     var _loanDuration = '3600'
     var _loanInterestRate = '2'
-    var _adminFee = '25'
+    var _adminFee = '1'
     var _lenderNonce = '1'
     var _nftCollateralContract = nft.address
     var _loanCurrency = usdToken.address
@@ -97,7 +100,7 @@ contract("NFTfi", function (accounts) {
     const walletBorrower = web3.eth.accounts.privateKeyToAccount(borrowerPrk);
     let borrowerSig = walletBorrower.sign(borrowerMg)
 
-    await nftfi.beginLoan(
+    await nftPawn.beginLoan(
       _loanPrincipalAmount,
       _nftCollateralId,
       _loanDuration,

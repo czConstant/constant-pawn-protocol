@@ -1,10 +1,10 @@
 pragma solidity ^0.8.0;
 import "./openzeppelin/IERC721.sol";
 import "./openzeppelin/SafeMath.sol";
-import "./NFTfiAdmin.sol";
-import "./NFTfiSigningUtils.sol";
+import "./NFTPawnAdmin.sol";
+import "./NFTPawnSigningUtils.sol";
 
-contract NFTfi is NFTfiAdmin, NFTfiSigningUtils {
+contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
     using SafeMath for uint256;
 
     /* ********** */

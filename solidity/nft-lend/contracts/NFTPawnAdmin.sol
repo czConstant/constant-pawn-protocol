@@ -7,7 +7,7 @@ import "./openzeppelin/ReentrancyGuard.sol";
 //        contract-wide fees, parameters, etc.
 // @author smartcontractdev.eth, creator of wrappedkitties.eth, cwhelper.eth, and
 //         kittybounties.eth
-contract NFTfiAdmin is Ownable, Pausable, ReentrancyGuard {
+contract NFTPawnAdmin is Ownable, Pausable, ReentrancyGuard {
     /* ****** */
     /* EVENTS */
     /* ****** */
@@ -53,7 +53,7 @@ contract NFTfiAdmin is Ownable, Pausable, ReentrancyGuard {
     // @notice The percentage of interest earned by lenders on this platform
     //         that is taken by the contract admin's as a fee, measured in
     //         basis points (hundreths of a percent).
-    uint256 public adminFeeInBasisPoints = 25;
+    uint256 public adminFeeInBasisPoints = 1;
 
     /* *********** */
     /* CONSTRUCTOR */
@@ -62,17 +62,12 @@ contract NFTfiAdmin is Ownable, Pausable, ReentrancyGuard {
     constructor() {
         // Whitelist testnet ETH
         erc20CurrencyIsWhitelisted[
-            address(0xd27e714B8810ade3eb5559827036fFc69bbAA6B6)
+            address(0x82B71b3E1090502DEDE449d766FA5a700b7D8880)
         ] = true;
 
         // Whitelist testnet USDT
         erc20CurrencyIsWhitelisted[
-            address(0x7B6059777415231D08717ce2A1205213A0F7dAe9)
-        ] = true;
-
-        // Whitelist Bnft
-        nftContractIsWhitelisted[
-            address(0x8fd57fE99aE9E8e5447E35ab6b50B28bB5687539)
+            address(0x0bB8Fe1750FF276d20c8A7D03E012034dB218941)
         ] = true;
     }
 
