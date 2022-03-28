@@ -37,6 +37,7 @@ const TestChain = artifacts.require("TestChain");
 
 contract("NFTPawn", function (accounts) {
   it("should assert true", async function () {
+
     let testChain = await TestChain.new()
     let chainId = await testChain.getTestChainID()
 
@@ -50,11 +51,20 @@ contract("NFTPawn", function (accounts) {
     await nftPawn.whitelistERC20Currency(usdToken.address, true)
     await nftPawn.whitelistNFTContract(nft.address, true)
 
-    var _borrower = accounts[8]
-    var _lender = accounts[9]
+    let addr = await web3.eth.accounts.create();
+    await web3.eth.personal.importRawKey(addr.privateKey, '')
+    await web3.eth.personal.unlockAccount(addr.address, '', 10000)
+    var _borrower = addr.address
+    let borrowerPrk = addr.privateKey
 
-    let borrowerPrk = '0xc21245cff289413bb13d6b386c5de1f6d38501e9cf0008e7a453923977af5da1'
-    let lenderPrk = '0x072a99164c4cb154b7f315d3ff14e50ad689ffd06819bd30f1a1d58617f9b23b'
+    addr = await web3.eth.accounts.create();
+    await web3.eth.personal.importRawKey(addr.privateKey, '')
+    await web3.eth.personal.unlockAccount(addr.address, '', 10000)
+    var _lender = addr.address
+    let lenderPrk = addr.privateKey
+
+    await web3.eth.sendTransaction({ from: accounts[0], to: _borrower, value: web3.utils.toWei('0.1', 'ether') });
+    await web3.eth.sendTransaction({ from: accounts[0], to: _lender, value: web3.utils.toWei('0.1', 'ether') });
 
     var _nftCollateralId = '1'
 
