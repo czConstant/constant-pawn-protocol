@@ -42,16 +42,19 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address borrower;
         // The address of the borrower.
         address lender;
-        // the nonce of the borrower
-        uint256 borrowerNonce;
-        uint256 lenderNonce;
     }
 
     /* ****** */
     /* EVENTS */
     /* ****** */
 
-    event LoanStarted(Loan loan);
+    event LoanStarted(
+        uint256 loanId,
+        address borrower,
+        address lender,
+        uint256 borrowerNonce,
+        uint256 lenderNonce
+    );
 
     event CancelNonce(address sender, uint256 nonce);
 
@@ -147,8 +150,6 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         loan.loanCurrency = _loanCurrency;
         loan.borrower = msg.sender;
         loan.lender = _lender;
-        loan.borrowerNonce = _borrowerAndLenderNonces[0];
-        loan.lenderNonce = _borrowerAndLenderNonces[1];
 
         // Sanity check loan values.
         require(
@@ -247,7 +248,13 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         // _mint(_lender, loan.loanId);
 
         // Emit an event with all relevant details from this transaction.
-        emit LoanStarted(loan);
+        emit LoanStarted(
+            loan.loanId,
+            loan.borrower,
+            loan.lender,
+            _borrowerAndLenderNonces[0],
+            _borrowerAndLenderNonces[1]
+        );
     }
 
     function payBackLoan(uint256 _loanId) external nonReentrant {
