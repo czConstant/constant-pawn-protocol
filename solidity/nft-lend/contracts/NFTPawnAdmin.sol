@@ -53,7 +53,7 @@ contract NFTPawnAdmin is Ownable, Pausable, ReentrancyGuard {
     // @notice The percentage of interest earned by lenders on this platform
     //         that is taken by the contract admin's as a fee, measured in
     //         basis points (hundreths of a percent).
-    uint256 public adminFeeInBasisPoints = 1;
+    uint256 public adminFeeInBasisPoints = 100;
 
     /* *********** */
     /* CONSTRUCTOR */

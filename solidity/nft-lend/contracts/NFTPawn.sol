@@ -43,25 +43,17 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         // The address of the borrower.
         address lender;
         // the nonce of the borrower
-        uint256 nonce;
+        uint256 borrowerNonce;
+        uint256 lenderNonce;
     }
 
     /* ****** */
     /* EVENTS */
     /* ****** */
 
-    event LoanStarted(
-        uint256 loanId,
-        address borrower,
-        address lender,
-        uint256 loanPrincipalAmount,
-        uint256 nftCollateralId,
-        uint256 loanStartTime,
-        uint256 loanDuration,
-        uint256 loanInterestRate,
-        address nftCollateralContract,
-        address loanCurrency
-    );
+    event LoanStarted(Loan loan);
+
+    event CancelNonce(address sender, uint256 nonce);
 
     event LoanRepaid(
         uint256 loanId,
@@ -155,6 +147,8 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         loan.loanCurrency = _loanCurrency;
         loan.borrower = msg.sender;
         loan.lender = _lender;
+        loan.borrowerNonce = _borrowerAndLenderNonces[0];
+        loan.lenderNonce = _borrowerAndLenderNonces[1];
 
         // Sanity check loan values.
         require(
@@ -253,18 +247,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         // _mint(_lender, loan.loanId);
 
         // Emit an event with all relevant details from this transaction.
-        emit LoanStarted(
-            loan.loanId,
-            msg.sender, //borrower,
-            _lender,
-            loan.loanPrincipalAmount,
-            loan.nftCollateralId,
-            block.timestamp, //_loanStartTime
-            loan.loanDuration,
-            loan.loanInterestRate,
-            loan.nftCollateralContract,
-            loan.loanCurrency
-        );
+        emit LoanStarted(loan);
     }
 
     function payBackLoan(uint256 _loanId) external nonReentrant {
@@ -423,6 +406,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
             "Nonce invalid, user has either cancelled/begun this loan, or reused a nonce when signing"
         );
         _nonceHasBeenUsedForUser[msg.sender][_nonce] = true;
+        emit CancelNonce(msg.sender, _nonce);
     }
 
     /* ******************* */
@@ -434,6 +418,10 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         returns (bool)
     {
         return _nonceHasBeenUsedForUser[_user][_nonce];
+    }
+
+    function getAdminFee() public view returns (uint256) {
+        return adminFeeInBasisPoints;
     }
 
     /* ****************** */
@@ -450,6 +438,9 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
             _loanDurationSoFarInSeconds = _loanTotalDurationAgreedTo;
         }
         uint256 totalLoanDay = _loanTotalDurationAgreedTo.div(86400);
+        if (totalLoanDay == 0) {
+            totalLoanDay = 1;
+        }
         uint256 sofarLoanDay = (_loanDurationSoFarInSeconds.div(86400)).add(1);
         if (sofarLoanDay > totalLoanDay) {
             sofarLoanDay = totalLoanDay;
