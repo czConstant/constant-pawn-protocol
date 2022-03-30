@@ -62,6 +62,14 @@ module.exports = {
       gas: 8000000,
       // gasPrice: 3 * (10 ** 9),
     },
+    avax_testnet: {
+      provider: function () {
+        return new HDWalletProvider(mnemonic, "https://api.avax-test.network/ext/bc/C/rpc");
+      },
+      network_id: "*",       // Any network (default: none)
+      gas: 8000000,
+      // gasPrice: 3 * (10 ** 9),
+    },
     // bsc_testnet: {
     //   provider: function () {
     //     return new HDWalletProvider([privateKey], "https://data-seed-prebsc-2-s2.binance.org:8545/");
