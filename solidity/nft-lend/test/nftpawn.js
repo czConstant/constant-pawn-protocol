@@ -20,7 +20,7 @@ contract("NFTPawn", function (accounts) {
     let usdToken = await TESTToken.new('USDCToken', 'USDC');
     let nft = await TESTNft.new('World', 'World');
     let nftPawn = await NFTPawn.new();
-    // let nftfi = await NFTfi.at('0xC618ED0213b7370D02dF331474Bd727B5fB02dAc');
+    // let nftfi = await NFTPawn.at('0x1684d2eD9c28a25EB2a75fd8fE529d895D87972f');
 
     // let usdToken = await TESTToken.at('0x0bB8Fe1750FF276d20c8A7D03E012034dB218941')
 
@@ -80,9 +80,14 @@ contract("NFTPawn", function (accounts) {
     var _borrowerNonce = '1'
 
     borrowerMg = web3.utils.soliditySha3(
+      _loanPrincipalAmount,
       _nftCollateralId,
+      _loanDuration,
+      _loanInterestRate,
+      _adminFee,
       _borrowerNonce,
       _nftCollateralContract,
+      _loanCurrency,
       _borrower,
       chainId,
     );
@@ -105,7 +110,7 @@ contract("NFTPawn", function (accounts) {
     //pay back
     // await nftPawn.payBackLoan(0, { from: _borrower });
     //liquidate
-    await nftPawn.liquidateOverdueLoan(0, { from: _lender });
+    // await nftPawn.liquidateOverdueLoan(0, { from: _lender });
 
 
     return assert.isTrue(true);
