@@ -33,18 +33,14 @@ async function main() {
 
     let chainId = '80001'
 
-    // let usdToken = await TESTToken.at('0x0bB8Fe1750FF276d20c8A7D03E012034dB218941')
-    // let nft = await TESTNft.at('0x4D9cc948E54E1C6C26Fd014D15b4bE994896f595');
-    // let nftPawn = await NFTPawn.at('0xbce662a8b91e307445b2edc40741b0ca177f2784');
-
     let usdTokenAddres = '0x0bB8Fe1750FF276d20c8A7D03E012034dB218941'
     let usdToken = new web3.eth.Contract(require('../build/contracts/TESTToken.json').abi, usdTokenAddres);
     let nftAddress = '0x4D9cc948E54E1C6C26Fd014D15b4bE994896f595'
     let nft = new web3.eth.Contract(require('../build/contracts/TESTNft.json').abi, nftAddress);
-    let nftPawnAddress = '0xFE3865908CDB81D8906C431Dc8451f7ECE7b95B0'
+    let nftPawnAddress = '0xAb06fc8919176CB61a042fd7785aF64F33571330'
     let nftPawn = new web3.eth.Contract(require('../build/contracts/NFTPawn.json').abi, nftPawnAddress);
 
-    var _nftCollateralId = '1'
+    var _nftCollateralId = '2'
 
     // {
     //   const tx = nft.methods.setApprovalForAll(nftPawn.options.address, true);
@@ -66,7 +62,7 @@ async function main() {
     //   let r = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     //   console.log(r)
     // }
-    // return
+    // // return
 
     // {
     //   const tx = usdToken.methods.approve(nftPawn.options.address, web3.utils.toWei('1000000', 'ether'));
@@ -113,7 +109,7 @@ async function main() {
     const lenderWallet = web3.eth.accounts.privateKeyToAccount(lenderPrk);
     let lenderSig = lenderWallet.sign(lenderMsg)
 
-    var _borrowerNonce = '1'
+    var _borrowerNonce = '2'
 
     borrowerMg = web3.utils.soliditySha3(
       _nftCollateralId,
@@ -139,7 +135,6 @@ async function main() {
         [borrowerSig.signature, lenderSig.signature],
       );
       const gas = (await tx.estimateGas({ from: _borrower })) * 2;
-      // const gas = '2000000';
       const gasPrice = await web3.eth.getGasPrice();
       const data = tx.encodeABI();
       const nonce = await web3.eth.getTransactionCount(_borrower, 'pending');

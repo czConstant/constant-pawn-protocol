@@ -56,6 +56,13 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         uint256 lenderNonce
     );
 
+    event OfferNow(
+        uint256 loanId,
+        address borrower,
+        address lender,
+        uint256 borrowerNonce,
+        uint256 lenderNonce
+    );
     event CancelNonce(address sender, uint256 nonce);
 
     event LoanRepaid(
@@ -134,7 +141,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address _lender,
         bytes[2] memory _borrowerAndLenderSignature
     ) public whenNotPaused nonReentrant {
-        bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
+        // bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
         bytes memory _lenderSignature = _borrowerAndLenderSignature[1];
 
         Loan memory loan;
@@ -190,16 +197,16 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         _nonceHasBeenUsedForUser[_lender][_borrowerAndLenderNonces[1]] = true;
 
         // Check that both signatures are valid.
-        require(
-            isValidBorrowerSignature(
-                loan.nftCollateralId,
-                _borrowerAndLenderNonces[0], //_borrowerNonce,
-                loan.nftCollateralContract,
-                msg.sender, //borrower,
-                _borrowerSignature
-            ),
-            "Borrower signature is invalid"
-        );
+        // require(
+        //     isValidBorrowerSignature(
+        //         loan.nftCollateralId,
+        //         _borrowerAndLenderNonces[0], //_borrowerNonce,
+        //         loan.nftCollateralContract,
+        //         msg.sender, //borrower,
+        //         _borrowerSignature
+        //     ),
+        //     "Borrower signature is invalid"
+        // );
         require(
             isValidLenderSignature(
                 loan.loanPrincipalAmount,
@@ -249,6 +256,146 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
 
         // Emit an event with all relevant details from this transaction.
         emit LoanStarted(
+            loan.loanId,
+            loan.borrower,
+            loan.lender,
+            _borrowerAndLenderNonces[0],
+            _borrowerAndLenderNonces[1]
+        );
+    }
+
+    function offerNow(
+        uint256 _loanPrincipalAmount,
+        uint256 _nftCollateralId,
+        uint256 _loanDuration,
+        uint256 _loanInterestRate,
+        uint256 _adminFee,
+        uint256[2] memory _borrowerAndLenderNonces,
+        address _nftCollateralContract,
+        address _loanCurrency,
+        address _borrower,
+        bytes[2] memory _borrowerAndLenderSignature
+    ) public whenNotPaused nonReentrant {
+        bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
+        bytes memory _lenderSignature = _borrowerAndLenderSignature[1];
+
+        Loan memory loan;
+
+        loan.loanId = totalNumLoans; //currentLoanId,
+        loan.loanPrincipalAmount = _loanPrincipalAmount;
+        loan.nftCollateralId = _nftCollateralId;
+        loan.loanStartTime = uint64(block.timestamp); //_loanStartTime
+        loan.loanDuration = uint32(_loanDuration);
+        loan.loanInterestRate = uint32(_loanInterestRate);
+        loan.loanAdminFee = uint32(_adminFee);
+        loan.nftCollateralContract = _nftCollateralContract;
+        loan.loanCurrency = _loanCurrency;
+        loan.lender = msg.sender;
+        loan.borrower = _borrower;
+
+        // Sanity check loan values.
+        require(
+            uint256(loan.loanDuration) <= maximumLoanDuration,
+            "Loan duration exceeds maximum loan duration"
+        );
+        require(
+            uint256(loan.loanDuration) != 0,
+            "Loan duration cannot be zero"
+        );
+        require(
+            uint256(loan.loanAdminFee) == adminFeeInBasisPoints,
+            "The admin fee has changed since this order was signed."
+        );
+
+        // Check that both the collateral and the principal come from supported
+        // contracts.
+        require(
+            erc20CurrencyIsWhitelisted[loan.loanCurrency],
+            "Currency denomination is not whitelisted to be used by this contract"
+        );
+        // require(
+        //     nftContractIsWhitelisted[loan.nftCollateralContract],
+        //     "NFT collateral contract is not whitelisted to be used by this contract"
+        // );
+
+        require(
+            !_nonceHasBeenUsedForUser[_borrower][_borrowerAndLenderNonces[0]],
+            "Borrower nonce invalid, borrower has either cancelled/begun this loan, or reused this nonce when signing"
+        );
+        _nonceHasBeenUsedForUser[_borrower][_borrowerAndLenderNonces[0]] = true;
+        require(
+            !_nonceHasBeenUsedForUser[msg.sender][_borrowerAndLenderNonces[1]],
+            "Lender nonce invalid, lender has either cancelled/begun this loan, or reused this nonce when signing"
+        );
+        _nonceHasBeenUsedForUser[msg.sender][
+            _borrowerAndLenderNonces[1]
+        ] = true;
+
+        // Check that both signatures are valid.
+        require(
+            isValidLenderSignature(
+                loan.loanPrincipalAmount,
+                loan.nftCollateralId,
+                loan.loanDuration,
+                loan.loanInterestRate,
+                loan.loanAdminFee,
+                _borrowerAndLenderNonces[0], //_borrowerNonce,
+                loan.nftCollateralContract,
+                loan.loanCurrency,
+                _borrower,
+                _borrowerSignature
+            ),
+            "Borrower signature is invalid"
+        );
+        require(
+            isValidLenderSignature(
+                loan.loanPrincipalAmount,
+                loan.nftCollateralId,
+                loan.loanDuration,
+                loan.loanInterestRate,
+                loan.loanAdminFee,
+                _borrowerAndLenderNonces[1], //_lenderNonce,
+                loan.nftCollateralContract,
+                loan.loanCurrency,
+                msg.sender,
+                _lenderSignature
+            ),
+            "Lender signature is invalid"
+        );
+
+        // Add the loan to storage before moving collateral/principal to follow
+        // the Checks-Effects-Interactions pattern.
+        loanIdToLoan[totalNumLoans] = loan;
+        totalNumLoans = totalNumLoans.add(1);
+
+        // Update number of active loans.
+        totalActiveLoans = totalActiveLoans.add(1);
+        require(
+            totalActiveLoans <= maximumNumberOfActiveLoans,
+            "Contract has reached the maximum number of active loans allowed by admins"
+        );
+
+        // Transfer collateral from borrower to this contract to be held until
+        // loan completion.
+        IERC721(loan.nftCollateralContract).transferFrom(
+            _borrower,
+            address(this),
+            loan.nftCollateralId
+        );
+
+        // Transfer principal from lender to borrower.
+        IERC20(loan.loanCurrency).transferFrom(
+            msg.sender,
+            _borrower,
+            loan.loanPrincipalAmount
+        );
+
+        // Issue an ERC721 promissory note to the lender that gives them the
+        // right to either the principal-plus-interest or the collateral.
+        // _mint(_lender, loan.loanId);
+
+        // Emit an event with all relevant details from this transaction.
+        emit OfferNow(
             loan.loanId,
             loan.borrower,
             loan.lender,
