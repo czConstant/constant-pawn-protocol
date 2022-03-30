@@ -61,14 +61,13 @@ contract NFTPawnAdmin is Ownable, Pausable, ReentrancyGuard {
 
     constructor() {
         // Whitelist testnet ETH
-        erc20CurrencyIsWhitelisted[
-            address(0x82B71b3E1090502DEDE449d766FA5a700b7D8880)
-        ] = true;
-
+        // erc20CurrencyIsWhitelisted[
+        //     address(0x82B71b3E1090502DEDE449d766FA5a700b7D8880)
+        // ] = true;
         // Whitelist testnet USDT
-        erc20CurrencyIsWhitelisted[
-            address(0x0bB8Fe1750FF276d20c8A7D03E012034dB218941)
-        ] = true;
+        // erc20CurrencyIsWhitelisted[
+        //     address(0xB639D653019Ffd7fC04001Eabd44EBad5fafC56C)
+        // ] = true;
     }
 
     /* ********* */

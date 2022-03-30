@@ -21,8 +21,10 @@ contract("NFTPawn", function (accounts) {
     let nft = await TESTNft.new('World', 'World');
     let nftPawn = await NFTPawn.new();
     // let nftfi = await NFTPawn.at('0x1684d2eD9c28a25EB2a75fd8fE529d895D87972f');
+    // avax 0xBb70130D4A3C14676205EDce634dEeD2acE0258D
 
     // let usdToken = await TESTToken.at('0x0bB8Fe1750FF276d20c8A7D03E012034dB218941')
+    // let usdToken = await TESTToken.at('0xB639D653019Ffd7fC04001Eabd44EBad5fafC56C')
 
     await nftPawn.whitelistERC20Currency(usdToken.address, true)
     await nftPawn.whitelistNFTContract(nft.address, true)
