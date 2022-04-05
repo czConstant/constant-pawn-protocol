@@ -31,16 +31,16 @@ async function main() {
     var _lender = "0x15d9B2BFc48Fe9881afa0d5343b5cF8ba6CFD4e7"
     let lenderPrk = "408bc7531f431a7c61cf8536f8fd1daf0e1d89043ee65442808c28fd327f9a84"
 
-    let chainId = '80001'
+    let chainId = '43113'
 
     let usdTokenAddres = '0x0bB8Fe1750FF276d20c8A7D03E012034dB218941'
     let usdToken = new web3.eth.Contract(require('../build/contracts/TESTToken.json').abi, usdTokenAddres);
-    let nftAddress = '0x66bcbd2a4008e814d878b692eb9d4a3e2c016bb2'
+    let nftAddress = '0xf55359251ce8d242a77521fc0f4f377c6d1be816'
     let nft = new web3.eth.Contract(require('../build/contracts/TESTNft.json').abi, nftAddress);
     let nftPawnAddress = '0xFE3865908CDB81D8906C431Dc8451f7ECE7b95B0'
     let nftPawn = new web3.eth.Contract(require('../build/contracts/NFTPawn.json').abi, nftPawnAddress);
 
-    var _nftCollateralId = '6'
+    var _nftCollateralId = '8'
 
     var _loanPrincipalAmount = web3.utils.toWei('1', 'picoether')
     var _loanDuration = '8640'
@@ -50,7 +50,7 @@ async function main() {
     var _nftCollateralContract = nft.options.address
     var _loanCurrency = usdToken.options.address
 
-    var _borrowerNonce = '0x4d29c250578b9babb4e7b23b00ff2837a709973e959e5cbfb55f93178c937d58'
+    var _borrowerNonce = '0xc93b1dcf3e51359830a88d1f2cb20d01b68a38dc73328459526bf3f8c9deedac'
 
     borrowerMg = web3.utils.soliditySha3(
       _nftCollateralId,
