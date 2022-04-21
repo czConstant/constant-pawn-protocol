@@ -15,21 +15,6 @@ impl Contract {
         );
     }
 
-    /// refund the last bid of each token type, don't update sale because it's already been removed
-
-    pub(crate) fn refund_all_offer(&mut self, sale: &Sale, offers: &Offers) {
-        for offer in offers {
-            ext_contract::ft_transfer(
-                offer.lender_id.clone(),
-                U128(offer.loan_principal_amount),
-                Some(String::from("refund from market")),
-                &sale.loan_currency,
-                1,
-                GAS_FOR_FT_TRANSFER,
-            );
-        }
-    }
-
     // pub(crate) fn internal_remove_sale(
     //     &mut self,
     //     nft_contract_id: AccountId,

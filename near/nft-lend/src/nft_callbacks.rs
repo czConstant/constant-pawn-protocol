@@ -5,7 +5,7 @@ use crate::*;
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
-    pub loan_principal_amount: u128,
+    pub loan_principal_amount: U128,
     pub loan_duration: u128,
     pub loan_currency: TokenId,
     pub loan_interest_rate: u32,
@@ -77,7 +77,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
                 approval_id,
                 nft_contract_id: nft_contract_id.clone(),
                 token_id: token_id.clone(),
-                loan_principal_amount: loan_principal_amount,
+                loan_principal_amount: loan_principal_amount.0,
                 loan_duration: loan_duration,
                 loan_currency: loan_currency,
                 loan_interest_rate: loan_interest_rate,
