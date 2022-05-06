@@ -10,6 +10,16 @@ module.exports = async (deployer, network) => {
   if (network == 'avax_testnet') {
     await nftPawn.whitelistERC20Currency('0xB639D653019Ffd7fC04001Eabd44EBad5fafC56C', true)
   }
+  if (network == 'bsc_testnet') {
+    await nftPawn.whitelistERC20Currency('0xD4CdEE9f0F25d3034d218B8708B0C53748e45eB9', true)
+    await nftPawn.whitelistERC20Currency('0x747af5243Bad2Da82ff7e456A299e299fc95fD75', true)
+  }
+  if (network == 'boba_testnet') {
+    await nftPawn.whitelistERC20Currency('0xad69faDe04903714D91c26578B7CF2a7fDa0A761', true)
+  }
+  if (network == 'one_testnet') {
+    await nftPawn.whitelistERC20Currency('0x3208f71F239ede678501343725f193a8DA39b2e2', true)
+  }
   if (network == 'development') {
     console.log('nothing')
   }

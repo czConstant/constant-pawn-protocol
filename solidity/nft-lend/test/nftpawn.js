@@ -17,7 +17,9 @@ contract("NFTPawn", function (accounts) {
     let testChain = await TestChain.new()
     let chainId = await testChain.getTestChainID()
 
-    let usdToken = await TESTToken.new('USDCToken', 'USDC');
+    let usdToken = await TESTToken.new('Binance-Peg USD Coin', 'USDC');
+    // let usdToken = await TESTToken.new('Tether', 'USDT');
+    // let usdToken = await TESTToken.new('Binance-Peg BSC-USD', 'BSC-USD');
     let nft = await TESTNft.new('World', 'World');
     let nftPawn = await NFTPawn.new();
     // let nftfi = await NFTPawn.at('0x1684d2eD9c28a25EB2a75fd8fE529d895D87972f');

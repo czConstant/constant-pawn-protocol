@@ -30,3 +30,4 @@ test_*
 .project
 .settings
 bcclient_test.go
+*.env

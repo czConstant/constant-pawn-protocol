@@ -17,15 +17,11 @@
  * phrase from a file you've .gitignored so it doesn't accidentally become public.
  *
  */
+ require('dotenv').config();
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-// var mnemonic = "end cloud any speed come federal alert tunnel grape sauce stadium good";
 
-// 0xaC9357969b310614DbfD7bdF513727896c86ED33
-var mnemonic = "normal mystery ball embody blue cave abstract tray life home bread ostrich"
-
-// var privateKey = "ff67a58ea6996f5f1895462929031bd8b0ca64cfe0439f6bc6530c0225179e33"; //lender
-var privateKey = "d4ed67dc0abe25085fede6e34b49abcef7f7a14523fa093bc267942f4a08abd9"; //borrower
+var privateKey = process.env.PRIVATE_KEY
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -56,27 +52,42 @@ module.exports = {
     },
     matic_testnet: {
       provider: function () {
-        return new HDWalletProvider(mnemonic, "https://rpc-mumbai.maticvigil.com/v1/a815d432597b6045371ea97a2a258a0a88354cb0");
+        return new HDWalletProvider([privateKey], "https://rpc-mumbai.maticvigil.com/v1/a815d432597b6045371ea97a2a258a0a88354cb0");
       },
       network_id: "*",       // Any network (default: none)
       gas: 8000000,
       gasPrice: 5 * (10 ** 9),
     },
-    // bsc_testnet: {
-    //   provider: function () {
-    //     return new HDWalletProvider([privateKey], "https://data-seed-prebsc-2-s2.binance.org:8545/");
-    //   },
-    //   network_id: "*",       // Any network (default: none)
-    //   gas: 9000000,
-    //   gasPrice: 15 * (10 ** 9),
-    // }
+    bsc_testnet: {
+      provider: function () {
+        return new HDWalletProvider([privateKey], "https://data-seed-prebsc-2-s2.binance.org:8545/");
+      },
+      network_id: "*",       // Any network (default: none)
+      gas: 8000000,
+    },
     avax_testnet: {
       provider: function () {
-        return new HDWalletProvider(mnemonic, "https://api.avax-test.network/ext/bc/C/rpc");
+        return new HDWalletProvider([privateKey], "https://api.avax-test.network/ext/bc/C/rpc");
       },
       network_id: "*",       // Any network (default: none)
       gas: 8000000,
       // gasPrice: 3 * (10 ** 9),
+    },
+    boba_testnet: {
+      provider: function () {
+        return new HDWalletProvider([privateKey], "https://rinkeby.boba.network");
+      },
+      network_id: "*",       // Any network (default: none)
+      gas: 8000000,
+      // gasPrice: 3 * (10 ** 9),
+    },
+    one_testnet: {
+      provider: function () {
+        return new HDWalletProvider([privateKey], "https://api.s0.b.hmny.io");
+      },
+      network_id: "*",       // Any network (default: none)
+      gas: 8000000,
+      websocket: true
     },
     // Another network with more advanced options...
     // advanced: {
