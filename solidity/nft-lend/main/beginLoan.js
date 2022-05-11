@@ -92,7 +92,8 @@ async function main() {
     var _lenderNonce = '1'
     var _nftCollateralContract = nft.options.address
     var _loanCurrency = usdToken.options.address
-
+    var _lenderAvailableAt = 1660188664 //Thursday, August 11, 2022 3:31:04 AM
+    var _borrowerAvailableAt = 1660188664 //Thursday, August 11, 2022 3:31:04 AM
     let lenderMsg = web3.utils.soliditySha3(
       _loanPrincipalAmount,
       _nftCollateralId,
@@ -103,6 +104,7 @@ async function main() {
       _nftCollateralContract,
       _loanCurrency,
       _lender,
+      _lenderAvailableAt,
       chainId,
     );
 
@@ -120,7 +122,6 @@ async function main() {
     );
     const walletBorrower = web3.eth.accounts.privateKeyToAccount(borrowerPrk);
     let borrowerSig = walletBorrower.sign(borrowerMg)
-
     {
       const tx = nftPawn.methods.beginLoan(
         _loanPrincipalAmount,
@@ -132,6 +133,7 @@ async function main() {
         _nftCollateralContract,
         _loanCurrency,
         _lender,
+        [_borrowerAvailableAt, _lenderAvailableAt],
         [borrowerSig.signature, lenderSig.signature],
       );
       const gas = (await tx.estimateGas({ from: _borrower })) * 2;

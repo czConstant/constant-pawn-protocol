@@ -42,6 +42,8 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address borrower;
         // The address of the borrower.
         address lender;
+        // The loan available at
+        uint64 loanAvailableAt;
     }
 
     /* ****** */
@@ -139,6 +141,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address _nftCollateralContract,
         address _loanCurrency,
         address _lender,
+        uint64[2] memory _borrowerAndLenderAvailableAt,
         bytes[2] memory _borrowerAndLenderSignature
     ) public whenNotPaused nonReentrant {
         // bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
@@ -157,6 +160,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         loan.loanCurrency = _loanCurrency;
         loan.borrower = msg.sender;
         loan.lender = _lender;
+        loan.loanAvailableAt = _borrowerAndLenderAvailableAt[0];
 
         // Sanity check loan values.
         require(
@@ -218,6 +222,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
                 loan.nftCollateralContract,
                 loan.loanCurrency,
                 _lender,
+                _borrowerAndLenderAvailableAt[1], //lenderAvailableAt
                 _lenderSignature
             ),
             "Lender signature is invalid"
@@ -274,7 +279,8 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address _nftCollateralContract,
         address _loanCurrency,
         address _borrower,
-        bytes[2] memory _borrowerAndLenderSignature
+        bytes[2] memory _borrowerAndLenderSignature,
+        uint64 _borrowerAvailableAt
     ) public whenNotPaused nonReentrant {
         bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
         bytes memory _lenderSignature = _borrowerAndLenderSignature[1];
@@ -343,6 +349,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
                 loan.nftCollateralContract,
                 loan.loanCurrency,
                 _borrower,
+                _borrowerAvailableAt,
                 _borrowerSignature
             ),
             "Borrower signature is invalid"
@@ -358,6 +365,7 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
                 loan.nftCollateralContract,
                 loan.loanCurrency,
                 msg.sender,
+                0,
                 _lenderSignature
             ),
             "Lender signature is invalid"

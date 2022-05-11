@@ -344,7 +344,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nft_simple"
+name = "nft_pawn"
 version = "0.1.0"
 dependencies = [
  "near-sdk",

@@ -28,6 +28,7 @@ impl FungibleTokenReceiver for Contract {
             loan_principal_amount,
             loan_duration,
             loan_interest_rate,
+            available_at,
         } = near_sdk::serde_json::from_str(&msg).expect("Invalid PurchaseArgs");
 
         let contract_and_token_id = format!("{}{}{}", nft_contract_id, DELIMETER, token_id);
@@ -52,6 +53,21 @@ impl FungibleTokenReceiver for Contract {
             );
             sale.lender = sender_id;
             sale.status = LoanStatus::Processing as u32;
+            sale.updated_at = U64(env::block_timestamp() / 1000000000);
+            sale.started_at = U64(env::block_timestamp() / 1000000000);
+            let new_offer = Offer {
+                offer_id: sale.offers.len() as u32 + 1,
+                lender_id: sale.lender.clone(),
+                loan_principal_amount: sale.loan_principal_amount,
+                loan_duration: sale.loan_duration,
+                loan_interest_rate: sale.loan_interest_rate,
+                created_at: U64(env::block_timestamp() / 1000000000),
+                updated_at: U64(env::block_timestamp() / 1000000000),
+                started_at: U64(env::block_timestamp() / 1000000000),
+                status: LoanStatus::Processing as u32,
+                available_at: available_at,
+            };
+            sale.offers.push(new_offer);
             self.sales.insert(&contract_and_token_id, &sale);
             self.process_purchase(
                 nft_contract_id.into(),
@@ -74,8 +90,11 @@ impl FungibleTokenReceiver for Contract {
                 loan_principal_amount: loan_principal_amount.0,
                 loan_duration: loan_duration,
                 loan_interest_rate: loan_interest_rate,
-                created_at: U64(env::block_timestamp() / 1000000),
+                created_at: U64(env::block_timestamp() / 1000000000),
+                updated_at: U64(env::block_timestamp() / 1000000000),
+                started_at: U64(0),
                 status: LoanStatus::Open as u32,
+                available_at: available_at,
             };
             sale.offers.push(new_offer);
             //
@@ -88,6 +107,7 @@ impl FungibleTokenReceiver for Contract {
                 "Amount must greater than loan principal amount ",
             );
             sale.status = LoanStatus::Done as u32;
+            sale.updated_at = U64(env::block_timestamp() / 1000000000);
             self.sales.insert(&contract_and_token_id, &sale);
             self.process_payback_loan(
                 nft_contract_id.into(),

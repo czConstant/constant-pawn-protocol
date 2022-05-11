@@ -6,9 +6,11 @@ use crate::*;
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
     pub loan_principal_amount: U128,
-    pub loan_duration: u128,
+    pub loan_duration: u32,
     pub loan_currency: TokenId,
     pub loan_interest_rate: u32,
+    pub loan_config: u32,
+    pub available_at: u64,
 }
 
 trait NonFungibleTokenApprovalsReceiver {
@@ -65,9 +67,24 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
             loan_duration,
             loan_currency,
             loan_interest_rate,
+            loan_config,
+            available_at,
         } = near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
 
         let contract_and_token_id = format!("{}{}{}", nft_contract_id, DELIMETER, token_id);
+
+        let sale = self.sales.get(&contract_and_token_id);
+        if !sale.is_none() {
+            let s = sale.unwrap();
+            if s.status == LoanStatus::Open as u32 || s.status == LoanStatus::Processing as u32 {
+                assert!(
+                    s.status != LoanStatus::Open as u32
+                        && s.status != LoanStatus::Processing as u32,
+                    "Loan is proccessing",
+                );
+            }
+        }
+
         let offers: Vec<Offer> = Vec::new();
         let lender = "";
         self.sales.insert(
@@ -81,8 +98,12 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
                 loan_duration: loan_duration,
                 loan_currency: loan_currency,
                 loan_interest_rate: loan_interest_rate,
-                created_at: U64(env::block_timestamp() / 1000000),
-                status: 0,
+                loan_config: loan_config,
+                available_at: available_at,
+                created_at: U64(env::block_timestamp() / 1000000000),
+                updated_at: U64(env::block_timestamp() / 1000000000),
+                started_at: U64(0),
+                status: LoanStatus::Open as u32,
                 lender: lender.to_string(),
                 offers: offers,
             },

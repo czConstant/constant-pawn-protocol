@@ -99,6 +99,7 @@ contract NFTPawnSigningUtils {
         address _nftCollateralContract,
         address _loanCurrency,
         address _lender,
+        uint64 _availableAt,
         bytes memory _lenderSignature
     ) public view returns (bool) {
         if (_lender == address(0)) {
@@ -117,7 +118,8 @@ contract NFTPawnSigningUtils {
                     _nftCollateralContract,
                     _loanCurrency,
                     _lender,
-                    chainId
+                    chainId,
+                    _availableAt
                 )
             );
 
