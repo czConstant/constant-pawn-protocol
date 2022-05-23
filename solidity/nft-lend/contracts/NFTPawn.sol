@@ -141,7 +141,6 @@ contract NFTPawn is NFTPawnAdmin, NFTPawnSigningUtils {
         address _nftCollateralContract,
         address _loanCurrency,
         address _lender,
-        uint64[2] memory _borrowerAndLenderAvailableAt,
         bytes[2] memory _borrowerAndLenderSignature
     ) public whenNotPaused nonReentrant {
         // bytes memory _borrowerSignature = _borrowerAndLenderSignature[0];
