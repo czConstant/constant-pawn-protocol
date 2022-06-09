@@ -1,7 +1,7 @@
 [package]
 name = "nftpawn-vesting"
-version = "0.0.2"
-authors = ["Near Inc <hello@nearprotocol.com>"]
+version = "0.0.1"
+authors = ["Nftpawm Team <hello@nftpawn.financial>"]
 edition = "2021"
 
 [dev-dependencies]
@@ -14,12 +14,12 @@ tokio = { version = "1.14", features = ["full"] }
 workspaces = "0.3"
 
 # remember to include a line for each contract
-fungible-token = { path = "./fungible-token" }
+nftpawn-token = { path = "./nftpawn-token" }
 vesting = { path = "./vesting" }
 
 [workspace]
 # remember to include a member for each contract
 members = [
-  "fungible-token",
+  "nftpawn-token",
   "vesting",
 ]

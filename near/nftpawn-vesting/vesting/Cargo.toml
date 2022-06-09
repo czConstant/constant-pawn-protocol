@@ -1,7 +1,7 @@
 [package]
 name = "vesting"
-version = "1.0.0"
-authors = ["Nftpawn Team <hello@nftpawn.financial>"]
+version = "0.0.1"
+authors = ["Nftpawm Team <hello@nftpawn.financial>"]
 edition = "2021"
 
 [lib]
