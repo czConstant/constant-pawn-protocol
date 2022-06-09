@@ -1,7 +1,7 @@
+use crate::*;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::json_types::{Base64VecU8, U128, U64};
+use near_sdk::json_types::{U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
-use near_sdk::{env, AccountId, Balance};
 
 /// Hash of Vesting schedule.
 pub type Hash = Vec<u8>;
@@ -16,13 +16,7 @@ pub struct VestingSchedule {
 
 impl VestingSchedule {
     pub fn assert_valid(&self) {
-        assert!(
-            self.timestamp.0 <= 0,
-            "Cliff timestamp can't be earlier than vesting start timestamp"
-        );
-        assert!(
-            self.amount.0 <= 0,
-            "Cliff timestamp can't be later than vesting end timestamp"
-        );
+        require!(self.timestamp.0 > 0, "timestamp can't be zero");
+        require!(self.amount.0 > 0, "amount can't be zero");
     }
 }

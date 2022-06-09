@@ -28,9 +28,8 @@ impl FungibleTokenReceiver for Contract {
         let mut total = 0 as u128;
         let mut last_t = U64(0);
         for s in vesting_schedules.iter() {
-            require!(s.amount > U128(0), "amount is zero");
-            require!(s.timestamp > U64(0), "timestamp is zero");
-            if (last_t > U64(0)) {
+            s.assert_valid();
+            if last_t > U64(0) {
                 require!(s.timestamp > last_t, "timestamp is lager than last_t");
             }
             last_t = s.timestamp;
