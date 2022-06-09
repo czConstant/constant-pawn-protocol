@@ -117,6 +117,28 @@ async fn init(
 // }
 
 #[tokio::test]
+async fn test_set_recipient_id() -> anyhow::Result<()> {
+    let initial_balance = U128::from(parse_near!("10000 N"));
+    let worker = workspaces::sandbox().await?;
+    let (token_contract, recipient, vesting_contract) = init(&worker, initial_balance).await?;
+
+    register_user(&worker, &token_contract, vesting_contract.id()).await?;
+
+    let res = vesting_contract
+        .call(&worker, "set_recipient_id")
+        .args_json((
+            recipient.id(),
+        ))?
+        .gas(300_000_000_000_000)
+        .transact()
+        .await?;
+
+    println!("set_recipient_id {:?}", res.is_success());
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn test_new_vesting_schedule() -> anyhow::Result<()> {
     let initial_balance = U128::from(parse_near!("10000 N"));
     let worker = workspaces::sandbox().await?;
@@ -125,6 +147,14 @@ async fn test_new_vesting_schedule() -> anyhow::Result<()> {
     register_user(&worker, &token_contract, vesting_contract.id()).await?;
 
     let transfer_amount = U128::from(parse_near!("100 N"));
+
+    // let res = vesting_contract
+    //     .call(&worker, "set_recipient_id")
+    //     .gas(300_000_000_000_000)
+    //     .transact()
+    //     .await?;
+
+    // println!("set_recipient_id {:?}", res.is_success());
 
     let mut rets: Vec<VestingSchedule> = Vec::new();
     rets.push(VestingSchedule {

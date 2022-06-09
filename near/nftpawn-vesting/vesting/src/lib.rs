@@ -2,9 +2,7 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::json_types::U128;
 use near_sdk::json_types::U64;
 use near_sdk::serde_json;
-use near_sdk::{
-    env, near_bindgen, require, AccountId, Gas, PanicOnDefault, PromiseOrValue,
-};
+use near_sdk::{env, near_bindgen, require, AccountId, Gas, PanicOnDefault, PromiseOrValue};
 
 pub use crate::types::*;
 
@@ -34,6 +32,14 @@ impl Contract {
             vesting_schedules: Vec::new(),
         };
         this
+    }
+
+    pub fn set_recipient_id(&mut self, recipient_id: AccountId) {
+        require!(
+            env::predecessor_account_id() == self.owner_id,
+            "predecessor_account_id is not owner_id"
+        );
+        self.recipient_id = recipient_id;
     }
 
     pub fn get_vesting_schedules(&self) -> Vec<VestingSchedule> {
