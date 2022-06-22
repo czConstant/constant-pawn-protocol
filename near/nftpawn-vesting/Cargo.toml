@@ -15,11 +15,9 @@ workspaces = "0.3"
 
 # remember to include a line for each contract
 nftpawn-token = { path = "./nftpawn-token" }
-vesting = { path = "./vesting" }
 
 [workspace]
 # remember to include a member for each contract
 members = [
   "nftpawn-token",
-  "vesting",
 ]

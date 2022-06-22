@@ -260,7 +260,7 @@ impl Contract {
                         );
                     }
                     let mut clone = self.clone_offer(v);
-                    clone.status = LoanStatus::Refunded as u32;
+                    clone.status = LoanStatus::Canceled as u32;
                     clone.updated_at = U64(env::block_timestamp() / 1000000000);
                     offers.push(clone);
                 }
@@ -314,7 +314,7 @@ impl Contract {
                     );
                 }
                 let mut clone = self.clone_offer(v);
-                clone.status = LoanStatus::Refunded as u32;
+                clone.status = LoanStatus::Canceled as u32;
                 clone.updated_at = U64(env::block_timestamp() / 1000000000);
                 offers.push(clone);
             } else {
@@ -468,7 +468,7 @@ impl Contract {
                             GAS_FOR_FT_TRANSFER,
                         );
                     }
-                    clone.status = LoanStatus::Refunded as u32;
+                    clone.status = LoanStatus::Canceled as u32;
                 }
             }
             offers.push(clone);
