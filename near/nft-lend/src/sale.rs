@@ -118,11 +118,12 @@ impl Contract {
                 env::current_account_id(),
                 token_id,
                 sale.approval_id,
-                "payout from market".to_string(),
+                "offer now".to_string(),
                 &nft_contract_id,
                 1,
                 GAS_FOR_NFT_TRANSFER,
-            );
+            )
+            .then(Promise::new(sale.owner_id.clone()).transfer(amount));
             //
         } else if action == "offer" {
             assert_ne!(sale.owner_id, sender_id, "Cannot buy your own sale.");
@@ -214,16 +215,17 @@ impl Contract {
                 offers: offers,
             },
         );
-        Promise::new(sale.lender).transfer(amount);
-        ext_contract::nft_transfer(
-            sale.owner_id,
-            token_id,
-            0,
-            "payout from market".to_string(),
-            &nft_contract_id,
-            1,
-            GAS_FOR_NFT_TRANSFER,
-        );
+        Promise::new(sale.lender)
+            .transfer(amount)
+            .then(ext_contract::nft_transfer(
+                sale.owner_id,
+                token_id,
+                0,
+                "payout from market".to_string(),
+                &nft_contract_id,
+                1,
+                GAS_FOR_NFT_TRANSFER,
+            ));
     }
 
     /// for add sale see: nft_callbacks.rs
@@ -436,6 +438,9 @@ impl Contract {
                         &contract_id,
                         1,
                         GAS_FOR_NFT_TRANSFER,
+                    )
+                    .then(
+                        Promise::new(sale.owner_id.clone()).transfer(clone.loan_principal_amount),
                     );
                 } else {
                     self.process_purchase(
