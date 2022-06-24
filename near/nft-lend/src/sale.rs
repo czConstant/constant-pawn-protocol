@@ -83,7 +83,11 @@ impl Contract {
 
         let amount = env::attached_deposit();
         assert!(amount > 0, "Amount must be greater than 0");
-        assert_ne!(sale.owner_id, sender_id, "Cannot buy your own sale.");
+        assert!(
+            amount == loan_principal_amount.0,
+            "Deposit amount must be equal input loan_principal_amount"
+        );
+        assert!("near" == sale.loan_currency, "ft_token is invalid");
 
         if action == "offer_now" {
             assert_ne!(sale.owner_id, sender_id, "Cannot buy your own sale.");
@@ -167,7 +171,8 @@ impl Contract {
         let contract_and_token_id = format!("{}{}{}", nft_contract_id, DELIMETER, token_id.clone());
         let sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let now: u128 = (env::block_timestamp() / 1000000000) as u128;
-        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128;
+        //expired + 2 days
+        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128 + 2 * 86400;
         assert!(expired > now, "invalid time to pay back loan ");
         let real_pay_amount = self.calculate_pay_amount(
             sale.loan_principal_amount,
@@ -353,7 +358,8 @@ impl Contract {
         let contract_and_token_id = format!("{}{}{}", contract_id, DELIMETER, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let now: u128 = (env::block_timestamp() / 1000000000) as u128;
-        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128;
+        //expired + 2 days
+        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128 + 2 * 86400;
         assert!(expired < now, "invalid time to liquidate loan");
         if sale.status == LoanStatus::Processing as u32 {
             sale.status = LoanStatus::Liquidated as u32;
@@ -544,7 +550,8 @@ impl Contract {
             format!("{}{}{}", contract_id.clone(), DELIMETER, token_id.clone());
         let sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let now: u128 = (env::block_timestamp() / 1000000000) as u128;
-        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128;
+        //expired + 2 days
+        let expired = sale.started_at.0 as u128 + sale.loan_duration as u128 + 2 * 86400;
         assert!(expired > now, "invalid time to pay back loan ");
         let real_pay_amount = self.calculate_pay_amount(
             sale.loan_principal_amount,

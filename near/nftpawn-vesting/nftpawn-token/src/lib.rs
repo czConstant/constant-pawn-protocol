@@ -72,8 +72,10 @@ impl Contract {
     /// Initializes the contract with the given total supply owned by the given `owner_id` with
     /// the given fungible token metadata.
     #[init]
-    pub fn new(owner_id: AccountId, community_id: AccountId, pub_sale_id: AccountId, total_supply: U128, metadata: FungibleTokenMetadata) -> Self {
-        // require!(!env::state_exists(), "Already initialized");
+    pub fn new(owner_id: AccountId, pub_sale_id: AccountId, private_sale_id: AccountId, seed_id: AccountId, 
+        advisor_id: AccountId, community_id: AccountId, core_id: AccountId, staking_id: AccountId,
+        total_supply: U128, metadata: FungibleTokenMetadata) -> Self {
+        require!(!env::state_exists(), "Already initialized");
         metadata.assert_valid();
         let mut this = Self {
             owner : owner_id.clone(),
@@ -81,42 +83,84 @@ impl Contract {
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
             vesting_schedules : LookupMap::new(b"v"),
         };
-        //community vesting
-        let mut community_vesting = Vec::new();
-        community_vesting.push(VestingSchedule {
-            timestamp: U64(0),
-            amount: U128(43200000000000000),
-        });
-
-        community_vesting.push(VestingSchedule {
-            timestamp: U64((env::block_timestamp() / 1000000000) + 3*30*86400),
-            amount: U128(43200000000000000),
-        });
-
-        this.vesting_schedules.insert(&community_id, &community_vesting);
-        this.token.internal_register_account(&community_id);
-
         //public sale vesting
-        let mut pub_sale_vesting = Vec::new();
-        pub_sale_vesting.push(VestingSchedule {
-            timestamp: U64((env::block_timestamp() / 1000000000) + 6*30*86400),
-            amount: U128(22500000000000000),
-        });
-
-        this.vesting_schedules.insert(&pub_sale_id, &pub_sale_vesting);
         this.token.internal_register_account(&pub_sale_id);
-        //
+        let pub_sale_vesting = this.init_vesting_pub_sale();
+        this.vesting_schedules.insert(&pub_sale_id, &pub_sale_vesting);
         
+        //private sale vesting
+        this.token.internal_register_account(&private_sale_id);
+        let private_sale_vesting = this.init_vesting_pri_sale();
+        this.vesting_schedules.insert(&private_sale_id, &private_sale_vesting);
+        
+        //seed vesting
+        this.token.internal_register_account(&seed_id);
+        let seed_vesting = this.init_vesting_seed();
+        this.vesting_schedules.insert(&seed_id, &seed_vesting);
+        
+        //advisor_vesting
+        this.token.internal_register_account(&advisor_id);
+        let advisor_vesting = this.init_vesting_advisor();
+        this.vesting_schedules.insert(&advisor_id, &advisor_vesting);
+        
+        //community vesting
+        this.token.internal_register_account(&community_id);
+        let community_vesting = this.init_vesting_community();
+        this.vesting_schedules.insert(&community_id, &community_vesting);
+        
+        //core vesting
+        this.token.internal_register_account(&core_id);
+        let core_vesting = this.init_vesting_core();
+        this.vesting_schedules.insert(&core_id, &core_vesting);
+        
+        //staking vesting
+        this.token.internal_register_account(&staking_id);
+        let staking_vesting = this.init_vesting_staking();
+        this.vesting_schedules.insert(&staking_id, &staking_vesting);
+        
+        //mint token owner        
         this.token.internal_register_account(&owner_id);
         this.token.internal_deposit(&owner_id, total_supply.into());
+        near_contract_standards::fungible_token::events::FtMint {
+            owner_id: &owner_id,
+            amount: &total_supply,
+            memo: Some("Initial tokens supply is minted"),
+        }
+        .emit();
         this
+    }
+   
+    pub fn get_vesting_schedules(&self, account_id: AccountId) -> Vec<VestingSchedule> {
+        match self.vesting_schedules.get(&account_id) {
+            Some(value) => {
+                value
+            },
+            None => {
+                Vec::new()
+            }
+        }
+    }
+
+    pub fn get_release_available(&self, account_id: AccountId) -> U128 {
+        match self.vesting_schedules.get(&account_id) {
+            Some(value) => {
+                let mut amount = 0 as u128;
+                for s in value.iter() {
+                    if s.timestamp <= U64(env::block_timestamp() / 1000000000) {
+                        amount = amount + s.amount.0 as u128
+                    }
+                }
+                U128(amount)
+            },
+            None => {
+                U128(0)
+            }
+        }
     }
 
     pub fn release(&mut self, account_id: AccountId) {
         match self.vesting_schedules.get(&account_id) {
             Some(value) => {
-                let log_message = format!("Value from LookupMap is {:?}", value.clone());
-                env::log(log_message.as_bytes());
                 let mut amount = 0 as u128;
                 let mut rets: Vec<VestingSchedule> = Vec::new();
                 for s in value.iter() {
@@ -133,8 +177,12 @@ impl Contract {
                     rets.push(item);
                 }
                 self.vesting_schedules.insert(&account_id, &rets);
-                //internal transfer
-                self.token.internal_transfer(&self.owner, &account_id, amount, Some("release vesting".to_string()));
+                if amount > 0{
+                    //internal transfer
+                    let log_message = format!("Release {:?} token to account {:?}", amount.clone(), account_id);
+                    self.token.internal_transfer(&self.owner, &account_id, amount, Some(log_message));
+                }
+               
             },
             None => {}
         }
@@ -147,6 +195,274 @@ impl Contract {
     fn on_tokens_burned(&mut self, account_id: AccountId, amount: Balance) {
         log!("Account @{} burned {}", account_id, amount);
     }
+    #[private]
+    pub fn init_vesting_pub_sale(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 6*30*86400),
+            amount: U128(22500000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(22500000000000000),
+        });
+        vesting
+    }
+
+    pub fn init_vesting_pri_sale(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 6*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 9*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 15*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting
+    }
+
+    pub fn init_vesting_seed(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 15*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 18*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 21*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 24*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 27*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 30*30*86400),
+            amount: U128(11250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 33*30*86400),
+            amount: U128(11250000000000000),
+        });
+
+        vesting
+    }
+    pub fn init_vesting_advisor(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 18*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 24*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 30*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 36*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 42*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 48*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 54*30*86400),
+            amount: U128(2250000000000000),
+        });
+        vesting
+    }
+    pub fn init_vesting_core(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 18*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 21*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 24*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 27*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 30*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 33*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 36*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 39*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 42*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 45*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 48*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 51*30*86400),
+            amount: U128(15000000000000000),
+        });
+        vesting
+    }
+
+    pub fn init_vesting_community(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64(0),
+            amount: U128(43200000000000000),
+        });
+
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 3*30*86400),
+            amount: U128(43200000000000000),
+        });
+
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 6*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 6*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 15*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 18*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 21*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 24*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 27*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 30*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 33*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 36*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 39*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 42*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 45*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 48*30*86400),
+            amount: U128(21600000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 51*30*86400),
+            amount: U128(21600000000000000),
+        });
+
+        vesting
+    }
+
+    pub fn init_vesting_staking(&mut self) -> Vec<VestingSchedule>{
+        let mut vesting = Vec::new();
+        vesting.push(VestingSchedule {
+            timestamp: U64(0),
+            amount: U128(36000000000000000),
+        });
+
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 12*30*86400),
+            amount: U128(27000000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 24*30*86400),
+            amount: U128(13500000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 36*30*86400),
+            amount: U128(6750000000000000),
+        });
+        vesting.push(VestingSchedule {
+            timestamp: U64((env::block_timestamp() / 1000000000) + 48*30*86400),
+            amount: U128(6750000000000000),
+        });
+        vesting
+    }
+
+    
 }
 
 near_contract_standards::impl_fungible_token_core!(Contract, token, on_tokens_burned);

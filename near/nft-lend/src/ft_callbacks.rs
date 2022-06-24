@@ -39,6 +39,7 @@ impl FungibleTokenReceiver for Contract {
 
         let ft_token_id = env::predecessor_account_id();
 
+        assert!(ft_token_id == sale.loan_currency, "ft_token is invalid");
         assert!(amount.0 > 0, "Amount must be greater than 0");
         if action == "offer_now" {
             assert_ne!(sale.owner_id, sender_id, "Cannot buy your own sale.");
